@@ -1,0 +1,220 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head> 
+<style > 
+*{ 
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+} 
+
+body{
+    width: 100%;
+    min-height: 100vh;  
+    display: relative;
+}
+    nav{ 
+        padding: 20px;
+        background-color: #dbbdbd;
+        display: flex; 
+        align-items: center;
+        justify-content: space-between;
+    }
+    nav .logo{
+        color: #fff;
+        font-size: 40px;
+    }
+    nav ul{
+        display: flex;
+        list-style-type: none;
+        flex: 1;
+    }
+    nav ul li a{   
+        display: inline-block; 
+        padding: 5px 10px;
+        color: black;
+        text-decoration: none;
+        margin-right: 18px;
+    }
+    nav ul li a:hover{  
+        cursor: pointer;
+        background-color: rgb(92, 79, 79);
+
+    }  
+    #hero h1{
+        text-align: center; 
+        font-size: 30px; 
+        margin-top: 40px;
+        margin-bottom: 20px;
+        color: cadetblue;
+    } 
+    #hero p{  
+        padding: 2px;
+        margin: 5px;
+        font-size: 18px;
+        line-height: 1.3;
+        margin-bottom: 20px;
+    } 
+    #hero p a{
+        color: cadetblue;
+       text-decoration: none;
+    } 
+    #hero p a:hover{
+        cursor: pointer;
+        text-decoration: underline;
+    } 
+    .section{ 
+        width: 100%;
+        flex: 1;
+        display: flex; 
+        height: auto;  
+        margin: 20px auto;
+        background-color: blanchedalmond;
+    }  
+    .section1{ 
+        /* list-style: none; */
+        padding: 20px;
+
+    }
+    .section1 ol{
+        padding-left: 10px; 
+        letter-spacing: 1.2;
+        margin: 0;
+        list-style-type: decimal;
+    }
+    .section2{
+        overflow: hidden;
+    } 
+
+    .section2 img{
+        height: 100%;
+        width: 100%;
+       object-fit: fill;
+    }
+    ol {
+    list-style-type: decimal;
+} 
+label{ 
+    margin: 4px;
+}
+.Contact{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+} 
+input{
+    margin: 4px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%; 
+    max-width: 500px;
+}
+footer{ 
+    display: absolute;
+    bottom: 0%;
+    background-color: #dbbdbd;
+    padding: 20px;
+    text-align: center;
+    color: black;
+}
+#submit{  
+    
+    width: 100px;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: cadetblue;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+    @media (max-width: 530px){
+        nav{
+            flex-direction: column;
+        } 
+        .section{ 
+            width: 100%;
+            flex-direction: column;
+        }
+         form{
+            
+            max-width: 300px;
+         } 
+         textarea{
+            rows: 3;
+            columns: 30;
+         }
+
+    }
+
+</style>
+<body>
+    <nav> 
+        <div class="logo">Trustt</div>
+        <div class="nav-menu">
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#services">Services</a></li>
+        </ul>
+    </div>
+    </nav> 
+    <div id="hero">
+        <h1>Welcome to Trustt</h1>
+        <p>Welcome to Trustt, a leading provider of digital platform for banking and banking GPT suite. Our mission is to help banks, NBFCs, and FinTechs rapidly deliver financial products to their customers, with a strong focus on customer convenience, operational efficiency, and security. Our product portfolio includes digital lending, digital distribution, digital identity, and multilingual conversations, among others, all of which can be customized to meet the specific needs of each client. <a href="#about">Learn More</a></p>
+       <div class="section">
+             <div class="section1">
+                <p>
+                    Trustt's Core Banking System<br>
+                    Whether you are a large Bank, NBFC, MFI, or FinTech, The Trustt's core banking system can launch your banking products in a matter of weeks not months. 
+                    <br>
+                    Trustt's Core Banking System offers a wide range of financial products, including:
+                    <ol>
+                        <li>Digital Lending</li>
+                        <li>Digital Distribution</li>
+                        <li>Digital Identity</li>
+                    </ol>
+                    
+                </p>
+                
+</div>
+           
+             <div class="section2"> 
+                <img src="unnamed.png" alt="" srcset="">
+             </div>
+       </div>
+    </div>  
+    <div class="Contact" >
+       <form >
+        <h2 style="margin-bottom: 6px; font-weight: bold; text-align: center;">Contact Us</h2> 
+        <label for="name">Name</label>
+        <input type="text" placeholder="Name" id="name"> 
+        <br>
+        <br>
+        <label for="email">Email</label>
+        <input type="text" placeholder="Email" id="email">
+        <br>
+        <br>
+        <label for="phone">Phone Number</label>
+        <input type="text" placeholder="Phone Number" id="phone">
+        <br>
+        <br>
+        <textarea rows="4" cols="40" placeholder="Message" id=""></textarea>
+        <br>
+        
+        <input type="submit" value="Submit"  id="submit">
+       </form>
+    </div>
+    <footer>
+        <p>Made by Anshu Rani</p>
+    </footer>
+</body>
+</html>
