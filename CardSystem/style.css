@@ -20,8 +20,7 @@ main{
     padding: 20px;
     border-radius: 10px;
     background-color: white;
-    display: grid;
-    gap: 20px 30px; 
+    flex-wrap: wrap;
     grid-template-columns: repeat(3,1fr); 
     background: linear-gradient(black, grey);
 }
