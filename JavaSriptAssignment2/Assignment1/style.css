@@ -1,0 +1,18 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+
+#div1 {
+    background-color: black;
+    color: white; /* Optional: to make text visible */
+}
+.change1 {
+    background-color: bisque;
+} 
+.paa{
+    display: none;
+}
