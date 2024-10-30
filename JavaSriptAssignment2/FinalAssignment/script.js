@@ -11,9 +11,9 @@ for (let i = 0; i < images.length; i++) {
 }
 
 let prev = document.getElementById("prev");
-let next = document.getElementById("next");
+let next = document.getElementById("next"); 
 
-prev.addEventListener("click", () => {
+prev.addEventListener("click", () => { 
     currentIndex = (currentIndex - 1 + images.length) % images.length; 
     displayedImage.src = images[currentIndex].src; 
 });

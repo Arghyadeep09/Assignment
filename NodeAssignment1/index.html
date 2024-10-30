@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Country Flags</title>
+</head>
+<body>
+    <h1 style="text-align: center; margin: 20px; font-weight: 1000; font-size: 60px;">Flags gallery</h1>
+    <div class="container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <script>
+        const result = async () => { 
+            try { 
+                const flagsContainer = document.getElementsByClassName('container')[0]; 
+                const response = await axios.get('https://restcountries.com/v3.1/all'); 
+                response.data.forEach(element => {
+                    const flagImg = document.createElement('img'); 
+                    flagImg.style.width = '200px';
+                    flagImg.style.height = '200px';  
+                    flagImg.style.margin = '10px';
+                    flagImg.src = element.flags.svg; 
+                    flagImg.alt = `${element.name.common} flag`; 
+                    flagsContainer.appendChild(flagImg); 
+                });
+            } catch (error) {
+                console.log(error.message);
+            } 
+        }
+
+        result();
+    </script>
+</body>
+</html>
