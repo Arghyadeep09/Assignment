@@ -1,0 +1,29 @@
+{
+    "topic": "Interactive Quiz",
+    "questions": [
+        {
+            "question": "What is the capital of France?",
+            "choices": ["London", "Paris", "Berlin", "Madrid"],
+            "correctAnswer": 1,
+            "score": 10
+        },
+        {
+            "question": "What is the capital of Germany?",
+            "choices": ["London", "Berlin", "Paris", "Madrid"],
+            "correctAnswer": 2,
+            "score": 5
+        },
+        {
+            "question": "What is the capital of Italy?",
+            "choices": ["London", "Paris", "Berlin", "Madrid"],
+            "correctAnswer": 0,
+            "score": 15
+        },
+        {
+            "question": "What is the capital of Spain?",
+            "choices": ["London", "Paris", "Berlin", "Madrid"],
+            "correctAnswer": 3,
+            "score": 20
+        }
+    ]
+}

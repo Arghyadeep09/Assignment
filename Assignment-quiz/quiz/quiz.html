@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css?family=League+Spartan:100,200,300,regular,500,600,700,800,900" rel="stylesheet" />
+    <link rel="stylesheet" href="quiz.css">
+</head>
+<body> 
+    <div class="container">
+        <div id="header">
+            <h1 id="heading"></h1>
+            <p id="description"> Hi, <span id="name"></span></p>
+        </div> 
+        <div id="main"> 
+            <div id="question-container">
+                <div id="questionNo">
+                    <p>Question <span id="no"></span></p>
+                </div>  
+                <br>
+                <div id="question">
+                    <p></p>
+                </div>
+                <div id="option-container"></div> <!-- Dynamic options will be added here -->
+
+                <!-- <div id="option">
+                    <div id="option1" class="options"></div>
+                    <div id="option2"class="options"></div>
+                    <div id="option3"class="options"></div>
+                    <div id="option4"class="options"></div>
+                </div>  -->
+                <div  id="answer"></div>
+            </div>  
+            <div id="time-container">
+                <div id="note">
+                    <p>Note:</p>
+                    <br>
+                    <p>You cannot go back once you move to next question</p>
+                    <br>
+                    <p>Each question has a timer of 1 minute</p>
+                    <br>
+                    <p>You can only choose one option at a time</p>
+                </div> 
+                <div id="time"> 
+                    <p>you have</p>
+                    <p ><span id="minutes"></span>s time left</p>
+                    <p>to answer this question</p>
+                </div> 
+                <p id="score-container">Score: <span id="score"></span></p> 
+            </div>
+        </div>
+        <div id="button">
+            <button id="check">Check</button> 
+            <button id="next">Next</button> 
+        </div>
+    </div>
+    <script src="quiz.js"></script>
+</body>
+</html>
