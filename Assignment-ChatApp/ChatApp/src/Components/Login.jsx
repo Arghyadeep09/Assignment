@@ -17,6 +17,7 @@ import { app } from "../firebaseConfig";
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const onSignUpClick = () => navigate("/signup");
 
   const auth = getAuth(app);
@@ -26,9 +27,14 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMeState] = useState(false);
+  const [error, setError] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
+    setLoading(true); // Show loading state
     try {
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -39,25 +45,29 @@ const Login = () => {
         setUser({
           uid: userCredential.user.uid,
           email: userCredential.user.email,
-          name: userCredential.user.displayName,
+          name: userCredential.user.displayName || "user",
         })
       );
       dispatch(setRememberMe(rememberMe));
       navigate("/DashBoard");
       console.log("User logged in:", userCredential.user);
     } catch (error) {
-      console.error("Error logging in:", error.message);
+      setError("Invalid email or password. Please try again.");
+    } finally {
+      setLoading(false); // Remove loading state
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      setError(""); // Clear previous errors
+      setLoading(true); // Show loading state
       const result = await signInWithPopup(auth, googleProvider);
       dispatch(
         setUser({
           uid: result.user.uid,
           email: result.user.email,
-          name: result.user.displayName,
+          name: result.user.displayName || "user",
         })
       );
       const user = result.user;
@@ -84,6 +94,9 @@ const Login = () => {
       navigate("/DashBoard");
     } catch (error) {
       console.error("Error with Google login:", error.message);
+      setError("Google login failed. Please try again.");
+    } finally {
+      setLoading(false); // Remove loading state
     }
   };
 
@@ -106,7 +119,7 @@ const Login = () => {
         }}
       >
         <h2>Log In</h2>
-
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <input
@@ -118,13 +131,22 @@ const Login = () => {
             />
           </div>
 
-          <div className="input-group">
+          <div className="input-group" style={{ position: "relative" }}>
             <input
-              type="password"
+              type={isPasswordVisible ? "text" : "password"}
               placeholder="Password"
-              onChange={(e) => setPassword(e.target.value)}
+              aria-label="Password"
               required
+              onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              style={{ position: "absolute", top: "22px", right: "10px" }}
+              type="button"
+              className="toggle-password"
+              onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              {isPasswordVisible ? "Hide" : "Show"}
+            </button>
           </div>
 
           <div className="options">
@@ -138,7 +160,9 @@ const Login = () => {
             </label>
           </div>
 
-          <button className="auth-btn">Log in</button>
+          <button className="auth-btn" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
 
         <div style={{}}>

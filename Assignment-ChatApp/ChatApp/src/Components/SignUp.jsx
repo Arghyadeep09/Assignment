@@ -23,13 +23,20 @@ const SignUp = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [error, setError] = useState("");
   const db = getFirestore(app);
   const auth = getAuth(app);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match!");
+      return;
+    }
     try {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
@@ -75,7 +82,7 @@ const SignUp = () => {
     <div className="signup-container">
       <div className="signup-card">
         <h2>Sign Up</h2>
-
+        {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSignUp}>
           <div className="row">
             <input
@@ -101,17 +108,30 @@ const SignUp = () => {
             />
           </div>
 
-          <div className="input-group">
+          <div className="input-group" style={{ position: "relative" }}>
             <input
-              type="password"
+              type={isPasswordVisible ? "text" : "password"}
               placeholder="Password"
+              aria-label="Password"
               required
               onChange={(e) => setPassword(e.target.value)}
             />
+            <button
+              style={{ position: "absolute", top: "22px", right: "10px" }}
+              type="button"
+              className="toggle-password"
+              onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+            >
+              {isPasswordVisible ? "Hide" : "Show"}
+            </button>
           </div>
-
           <div className="input-group">
-            <input type="password" placeholder="Confirm Password" required />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
           </div>
 
           <button className="signup-btn">Sign up</button>
