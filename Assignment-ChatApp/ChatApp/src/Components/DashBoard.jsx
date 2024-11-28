@@ -1,8 +1,10 @@
 import "./InboxHeader.css"; // Import your CSS for styling
 import "boxicons";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { getAuth } from "firebase/auth";
 import { useState, useEffect } from "react";
 import { app } from "../firebaseConfig";
+import { setTeamMembers } from "./../store/teamMembersSlice";
 import {
   getFirestore,
   collection,
@@ -19,25 +21,41 @@ import {
 const DashBoard = () => {
   const db = getFirestore(app);
   const user = useSelector((state) => state.auth.user);
-
-  const [teamMembers, setTeamMembers] = useState([]);
+  const dispatch = useDispatch();
+  //sconst [teamMembers, setTeamMembers] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [selectedChatRoom, setSelectedChatRoom] = useState(null);
   const [newMessage, setNewMessage] = useState("");
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const auth = getAuth();
   // Fetch team members from Firestore
   useEffect(() => {
     const fetchTeamMembers = async () => {
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      const fetchedUsers = usersSnapshot.docs
-        .map((doc) => doc.data())
-        .filter((member) => member.uid !== user.uid); // Exclude the current user
-      setTeamMembers(fetchedUsers);
+      try {
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const fetchedUsers = usersSnapshot.docs
+          .map((doc) => ({
+            uid: doc.id,
+            name: doc.data().name,
+            email: doc.data().email,
+            avatar: doc.data().avatar || "https://placehold.co/40x40",
+          }))
+          .filter((member) => member.uid !== user.uid); // Exclude the current user
+        console.log(fetchedUsers);
+
+        dispatch(setTeamMembers(fetchedUsers));
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+        setError(error.message);
+        setLoading(false);
+      }
     };
 
-    fetchTeamMembers();
-  }, [user]);
+    if (user) fetchTeamMembers();
+  }, [user, db, dispatch]);
 
   // Fetch recent chat rooms
   useEffect(() => {
@@ -114,6 +132,9 @@ const DashBoard = () => {
     }
   };
 
+  const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
+  if (loading) return <div>loadins</div>;
+  if (error) return <div>error</div>;
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
@@ -130,15 +151,23 @@ const DashBoard = () => {
         {/* Team Members */}
         <div className="team-members">
           <h3>Team Members</h3>
-          {teamMembers.map((member) => (
-            <div key={member.uid} className="team-member">
-              <img src={member.avatar} alt={member.name} className="avatar" />
-              <div>
-                <p>{member.name}</p>
-                <button onClick={() => createChatRoom(member)}>Chat</button>
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : teamMembers && teamMembers.length > 0 ? (
+            teamMembers.map((member) => (
+              <div key={member.uid} className="team-member">
+                <img src={member.avatar} alt={member.name} className="avatar" />
+                <div>
+                  <p>{member.name}</p>
+                  <button onClick={() => createChatRoom(member)}>Chat</button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p>No team members available</p>
+          )}
         </div>
 
         {/* Recent Chats */}
@@ -159,7 +188,24 @@ const DashBoard = () => {
       {/* Main Chat Section */}
       <div className="main-chat">
         <div className="chat-header">
-          <h2>Messages</h2>
+          <div className="header-container">
+            <h2>Messages</h2>
+            <div className="chat-header-right">
+              <div className="header-right">
+                <div className="notification-icon">
+                  <box-icon type="solid" name="bell"></box-icon>
+                </div>
+                <div className="profile">
+                  <img
+                    src="http://placehold.co/40x40"
+                    alt="profile of user"
+                    className="profile-picture"
+                  />
+                  <span className=" profile-name">{user.name}</span>
+                </div>
+              </div>
+            </div>
+          </div>
           {selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>}
         </div>
 
@@ -196,3 +242,4 @@ const DashBoard = () => {
 };
 
 export default DashBoard;
+//block
