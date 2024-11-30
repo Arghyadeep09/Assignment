@@ -52,7 +52,10 @@
 }
 
 .team-members {
-  margin-bottom: 20px;
+  margin-bottom: 10px; 
+  overflow-y: auto;
+  height: 35%;
+
 }
 
 .team-member {
@@ -92,7 +95,9 @@
   margin-left: auto;
 }
 
-.recent-chats {
+.recent-chats { 
+  overflow-y: auto;
+  height: 35%;
   margin-top: 20px;
 }
 
@@ -227,7 +232,7 @@
     transform: translateY(0);
   }
 }
-.header-conatiner {
+.header-container{
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -287,4 +292,26 @@
   margin: 10px 0;
   font-size: 14px;
   color: #333;
+}
+.chat-messages {
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 10px 0;
+}
+
+.message {
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  color: white; /* Default text color */
+}
+
+.message.sent {
+  background-color: rgba(0, 0, 0, 0.1); /* Adjust for light themes */
+  text-align: right;
+}
+
+.message.received {
+  background-color: rgba(255, 255, 255, 0.1); /* Adjust for dark themes */
+  text-align: left;
 }

@@ -4,7 +4,7 @@
 import "./../styles/Signup.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/authSlice";
 import {
   createUserWithEmailAndPassword,
@@ -49,13 +49,16 @@ const SignUp = () => {
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`,
       });
+      console.log(userCredential);
+
       dispatch(
         setUser({
           uid: userCredential.user.uid,
           email: userCredential.user.email,
-          name: userCredential.user.name,
+          name: userCredential.user.displayName,
         })
       );
+
       const userRef = doc(db, "users", userCredential.user.uid);
       const userSnap = await getDoc(userRef);
 
