@@ -6,6 +6,9 @@ import { useState, useEffect } from "react";
 import { app } from "../firebaseConfig";
 import { setTeamMembers } from "./../store/teamMembersSlice";
 import EmojiPicker from "emoji-picker-react";
+import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
+import loadingImage from "./../assets/f94c66714ca61bccbf79a771cac89335.gif";
+import { IoSend } from "react-icons/io5";
 import {
   getFirestore,
   collection,
@@ -35,6 +38,42 @@ const DashBoard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [sidebarActive, setSidebarActive] = useState(false);
+  const [selectedFont, setSelectedFont] = useState("Arial");
+
+  const handleFontChange = async (e) => {
+    const newFont = e.target.value;
+
+    try {
+      // Update Firestore
+      const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+      await updateDoc(chatRoomRef, { font: newFont });
+
+      // Update local state
+      setSelectedChatRoom((prev) => ({
+        ...prev,
+        font: newFont,
+      }));
+    } catch (error) {
+      console.error("Error updating chatroom font:", error);
+      alert("Failed to update font. Please try again.");
+    }
+  };
+  useEffect(() => {
+    if (selectedChatRoom?.id) {
+      const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+
+      const unsubscribe = onSnapshot(chatRoomRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const chatRoomData = docSnapshot.data();
+          setSelectedFont(chatRoomData.font || "Arial"); // Default to Arial if no font is set
+        }
+      });
+
+      return () => unsubscribe();
+    }
+  }, [selectedChatRoom?.id, db]);
+
   const auth = getAuth();
   // Fetch team members from Firestore
 
@@ -205,7 +244,8 @@ const DashBoard = () => {
         const newChatRoomRef = await addDoc(collection(db, "chatrooms"), {
           participantIds: participantIds, // Unique identifier for this chat room
           participants: [user.uid, member.uid], // Array of participant IDs
-          color: "#000000",
+          color: "#ffffff",
+          font: "Arial",
           createdAt: serverTimestamp(),
         });
 
@@ -305,12 +345,38 @@ const DashBoard = () => {
     setShowEmojiPicker(false);
   };
   console.log(selectedMember);
-  if (loading) return <div>loadins</div>;
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          width: "100vw",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f8f8f8", // Optional background color
+        }}
+      >
+        <img
+          src={loadingGif}
+          alt="Loading..."
+          style={{ minHeight: "50%", minWidth: "50%", objectFit: "fill" }}
+        />
+      </div>
+    );
+  }
+
   if (error) return <div>error</div>;
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <div className="sidebar">
+      <div className={`sidebar ${sidebarActive ? "active" : ""}`}>
+        {sidebarActive && (
+          <box-icon
+            name="x"
+            onClick={() => setSidebarActive(!sidebarActive)}
+          ></box-icon>
+        )}
         <h2 className="app-title">Chatter</h2>
         <div className="search-box">
           <input
@@ -374,12 +440,23 @@ const DashBoard = () => {
       <div className="main-chat">
         <div className="chat-header">
           <div className="header-container">
-            <h2>Messages</h2>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <div className="menu-icon">
+                <box-icon
+                  name="menu"
+                  onClick={() => setSidebarActive(!sidebarActive)}
+                ></box-icon>
+              </div>
+              <h2>Messages</h2>
+            </div>
             <div className="chat-header-right">
               <div className="header-right">
-                <div className="notification-icon">
-                  <box-icon type="solid" name="bell"></box-icon>
-                </div>
+                <div className="notification-icon"></div>
                 <div className="profile">
                   <img
                     src="http://placehold.co/40x40"
@@ -387,18 +464,18 @@ const DashBoard = () => {
                     className="profile-picture"
                   />
                   <span className=" profile-name">{user.name}</span>
-                  <div className="color-picker">
+                  <div className="color-picker" style={{ marginLeft: "5px" }}>
                     <label htmlFor="colorPicker">
                       <box-icon
                         type="solid"
                         name="color"
-                        color={selectedChatRoom?.color || "#000000"} // Correct JSX syntax
+                        color={selectedChatRoom?.color || "#fff"} // Correct JSX syntax
                       ></box-icon>
                     </label>
                     <input
                       type="color"
                       id="colorPicker"
-                      value={selectedChatRoom?.color || "#000000"}
+                      value={selectedChatRoom?.color || "#fff"}
                       onChange={async (e) => {
                         const newColor = e.target.value;
 
@@ -431,94 +508,132 @@ const DashBoard = () => {
               </div>
             </div>
           </div>
-          {selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>}
+          {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
         </div>
-        <div>
+        {selectedMember == null && (
+          <div
+            style={{
+              height: "90vh",
+              width: "100%",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "#f8f8f8", // Optional background color
+            }}
+          >
+            <img
+              src={loadingImage}
+              alt="start chat "
+              width={600}
+              style={{ objectFit: "contain" }}
+            />
+          </div>
+        )}
+
+        {selectedMember !== null && (
           <div className="chat-header">
             <div className="profile">
               <img
                 src="http://placehold.co/40x40"
-                alt={`Profile `}
+                alt="Profile"
                 className="profile-picture"
               />
-              <span className="profile-name">
-                {selectedMember !== null ? selectedMember.name : null}
-              </span>
-
+              <span className="profile-name">{selectedMember.name}</span>
               <i className="fas fa-chevron-down profile-icon"></i>
             </div>
-            <div className="block-div"> block</div>
+            <div style={{ fontFamily: selectedFont }}>
+              <div className="font-selector">
+                <label htmlFor="font-dropdown">Choose Font:</label>
+                <select
+                  id="font-dropdown"
+                  className="font-dropdown"
+                  value={selectedFont}
+                  onChange={handleFontChange}
+                >
+                  <option value="Arial">Arial</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
-
+        )}
         {/* Chat Messages */}
-        <div
-          className="chat-messages"
-          style={{
-            backgroundColor: selectedChatRoom?.color || "#ffffff", // Default white
-            padding: "10px",
-            borderRadius: "8px",
-          }}
-        >
-          {chatMessages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${
-                message.senderId === user.uid ? "sent" : "received"
-              }`}
-            >
-              <p className="message-text">{message.text}</p>
-              <span className="message-time">
-                {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
-              </span>
-            </div>
-          ))}
-        </div>
 
-        {/* Message Input */}
-        <div className="chat-input" style={{ position: "relative" }}>
-          {/* Emoji Picker Toggle Button */}
-          <button
-            onClick={() => setShowEmojiPicker((prev) => !prev)}
-            className="emoji-picker-button"
-            style={{ marginRight: "10px" }}
-          >
-            <box-icon name="happy" size="lg"></box-icon>
-          </button>
-
-          {/* Emoji Picker Component */}
-          {showEmojiPicker && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: "50px",
-                left: "10px",
-                zIndex: 100,
-                background: "white",
-                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-                borderRadius: "8px",
-              }}
-            >
-              <EmojiPicker onEmojiClick={handleEmojiClick} />
-            </div>
-          )}
-
-          {/* Message Input Field */}
-          <input
-            type="text"
-            placeholder="Enter your message here..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
+        {selectedMember !== null && (
+          <div
+            className="chat-messages"
+            style={{
+              backgroundColor: selectedChatRoom?.color || "#ffffff", // Default white
+              padding: "10px",
+              borderRadius: "8px",
+              fontFamily: selectedFont,
             }}
-          />
+          >
+            {chatMessages.map((message, index) => (
+              <div
+                key={index}
+                className={`message ${
+                  message.senderId === user.uid ? "sent" : "received"
+                }`}
+              >
+                <p className="message-text">{message.text}</p>
+                <span className="message-time">
+                  {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Message Input */}
+        {selectedMember !== null && (
+          <div className="chat-input" style={{ position: "relative" }}>
+            {/* Emoji Picker Toggle Button */}
+            <button
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              className="emoji-picker-button"
+              style={{ marginRight: "10px" }}
+            >
+              <box-icon name="happy" size="lg"></box-icon>
+            </button>
 
-          {/* Send Button */}
-          <button onClick={sendMessage}>
-            <box-icon name="send" size="lg"></box-icon>
-          </button>
-        </div>
+            {/* Emoji Picker Component */}
+            {showEmojiPicker && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "50px",
+                  left: "10px",
+                  zIndex: 100,
+                  background: "white",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                  borderRadius: "8px",
+                }}
+              >
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+
+            {/* Message Input Field */}
+            <input
+              type="text"
+              placeholder="Enter your message here..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+            />
+
+            {/* Send Button */}
+            <button onClick={sendMessage}>
+              <box-icon name="send" size="lg" color="#ff4d4d"></box-icon>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

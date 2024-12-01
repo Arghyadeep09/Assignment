@@ -52,12 +52,17 @@
 }
 
 .team-members {
-  margin-bottom: 10px; 
+  margin-bottom: 10px;
   overflow-y: auto;
   height: 35%;
-
+  max-height: 300px; /* Adjust height as needed */
+  overflow-y: scroll;
+  -ms-overflow-style: none; /*For Internet Explorer and Edge*/
 }
-
+.team-members ::-webkit-scrollbar {
+  width: 0; /* Hides the scrollbar width */
+  height: 0;
+}
 .team-member {
   display: flex;
   align-items: center;
@@ -95,7 +100,7 @@
   margin-left: auto;
 }
 
-.recent-chats { 
+.recent-chats {
   overflow-y: auto;
   height: 35%;
   margin-top: 20px;
@@ -232,7 +237,7 @@
     transform: translateY(0);
   }
 }
-.header-container{
+.header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -314,4 +319,44 @@
 .message.received {
   background-color: rgba(255, 255, 255, 0.1); /* Adjust for dark themes */
   text-align: left;
+}
+.menu-icon {
+  display: none; /* Hide by default */
+  font-size: 24px;
+  color: #2c3e50;
+  cursor: pointer;
+}
+/* Hide Sidebar and Show Menu Icon on Smaller Screens */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+    font-weight: 24px;
+  }
+  .menu-icon {
+    display: block; /* Show only on smaller screens */
+    margin: 10px;
+  }
+  .menu-icon {
+    display: block;
+
+    font-size: 24px;
+    cursor: pointer;
+  }
+}
+
+/* Show Sidebar when Active */
+.sidebar.active {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 300px;
+  background: #ffffff;
+  border-right: 1px solid #eaeaea;
+  padding: 20px;
+  overflow-y: auto;
+  height: 100vh;
+
+  z-index: 100;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }

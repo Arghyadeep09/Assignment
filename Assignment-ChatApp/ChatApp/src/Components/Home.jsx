@@ -1,58 +1,59 @@
-import {  useNavigate ,Outlet } from "react-router-dom";
-const Home = () => { 
+import { useNavigate, Outlet } from "react-router-dom";
+import Typewriter from "./Typewriter"; // Import the Typewriter component
+import "./../styles/Home.css";
+
+const Home = () => {
   const navigate = useNavigate();
-  const handleGetStarted = () => navigate("/login")
-  
-  return ( 
+  const handleGetStarted = () => navigate("/login");
+
+  return (
     <div
       style={{
-        fontFamily: 'Arial, sans-serif',
-        backgroundColor: '#007bff',
-        color: '#fff',
-        padding: '20px',
-        minHeight: '100vh',
+        fontFamily: "Arial, sans-serif",
+        backgroundColor: "#007bff",
+        color: "#fff",
+        padding: "20px",
+        minHeight: "100vh",
+        position: "relative",
+        background: "linear-gradient(to top ,#4dc9e6, #210cae)",
       }}
     >
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '50px',
-      }}
-    >
-    <div style={{ maxWidth: '50%' }}>
-      <h1
-        style={{
-          fontSize: '3rem',
-          fontWeight: 'bold',
-          marginBottom: '20px',
-        }}
-      >
-        Have your best chat
-      </h1>
-      <h3
-        style={{
-          fontSize: '1.5rem',
-          fontWeight: '300',
-          marginBottom: '30px',
-        }}
-      >
-        Fast, easy & unlimited team chat.
-      </h3>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <button
+      <div style={{ position: "absolute", top: "-30px", left: "35px" }}>
+        <img
+          src="https://i.ibb.co/jLYtddL/p8b6nfkj8tzf45g9t46xa20k8e-image-removebg-preview.png"
+          alt="logo"
+          width="180"
+          height="150"
+        />
+      </div>
+      <div className="main-content">
+        <div className="text-container">
+          <h1>
+            Have your best chat
+            <Typewriter style={{ fontsize: "3.5rem", fontweight: "600" }} />
+          </h1>
+          <h3
+            style={{
+              fontSize: "1.5rem",
+              fontWeight: "300",
+              marginBottom: "30px",
+            }}
+          >
+            Fast, easy & unlimited team chat.
+          </h3>
+          <div style={{ display: "flex", gap: "20px" }}>
+            <button
               className="get-started"
-              onClick={  handleGetStarted } 
+              onClick={handleGetStarted}
               style={{
-                fontSize: '1.2rem',
-                padding: '10px 20px',
-                backgroundColor: '#fff',
-                color: '#007bff',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
+                fontSize: "1.2rem",
+                padding: "10px 20px",
+                backgroundColor: "#fff",
+                color: "#007bff",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontWeight: "bold",
               }}
             >
               Get Started
@@ -62,53 +63,54 @@ const Home = () => {
 
         {/* Image Content */}
         <div
+          className="img-container"
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '40px',
+            display: "flex",
+            flexDirection: "column",
+            gap: "40px",
             alignItems: "end",
           }}
         >
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: "relative" }} className="image1">
             <img
               src="https://www.shutterstock.com/image-photo/young-happy-smiling-pretty-woman-260nw-2249452187.jpg"
               alt="User 1"
               style={{
-                width: '90%',
-                maxWidth: '380px',
-                maxHeight: '250px',
-                borderRadius: '10px',
+                width: "90%",
+                maxWidth: "380px",
+                maxHeight: "250px",
+                borderRadius: "10px",
                 marginRight: "180px",
               }}
             />
             <div
               style={{
-                position: 'absolute',
-                top: '160px',
-                left: '150px',
-                backgroundColor: '#ffa500',
-                padding: '10px',
-                borderRadius: '10px',
+                position: "absolute",
+                bottom: "100px",
+                left: "150px",
+                backgroundColor: "#ffa500",
+                padding: "5px",
+                borderRadius: "10px",
               }}
             >
               Hi, how&apos;s the report?
             </div>
           </div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: "relative" }} className="image2">
             <img
               src="https://www.qrcaviews.org/wp-content/uploads/2020/03/phone-girl-FI-spring20.jpg"
               alt="User 2"
-              style={{ width: '200px', height: '200px', borderRadius: '10px' }}
+              style={{ width: "200px", height: "200px", borderRadius: "10px" }}
             />
             <div
               style={{
-                position: 'absolute',
-                bottom: '120px',
-                left: '120px',
-                backgroundColor: '#007bff',
-                padding: '10px',
-                borderRadius: '10px',
-                color: '#fff',
+                position: "absolute",
+                bottom: "120px",
+                left: "120px",
+                backgroundColor: "grey",
+                padding: "5px",
+                borderRadius: "10px",
+                color: "#fff",
               }}
             >
               I&rsquo;m on it!
@@ -117,7 +119,7 @@ const Home = () => {
         </div>
       </div>
       <Outlet />
-    </div> 
+    </div>
   );
 };
 

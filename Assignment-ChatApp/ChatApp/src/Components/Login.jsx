@@ -105,7 +105,7 @@ const Login = () => {
       style={{
         width: "100%",
         height: "100vh",
-        background: " linear-gradient(#4dc9e6, #210cae)",
+        // background: " linear-gradient(to top, #4dc9e6, #210cae)",
       }}
     >
       <div
