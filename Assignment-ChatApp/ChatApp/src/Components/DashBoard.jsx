@@ -7,8 +7,7 @@ import { app } from "../firebaseConfig";
 import { setTeamMembers } from "./../store/teamMembersSlice";
 import EmojiPicker from "emoji-picker-react";
 import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
-import loadingImage from "./../assets/f94c66714ca61bccbf79a771cac89335.gif";
-import { IoSend } from "react-icons/io5";
+import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
 import {
   getFirestore,
   collection,
@@ -40,16 +39,14 @@ const DashBoard = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sidebarActive, setSidebarActive] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
+  console.log("selected font: " + selectedFont);
 
   const handleFontChange = async (e) => {
     const newFont = e.target.value;
 
     try {
-      // Update Firestore
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
       await updateDoc(chatRoomRef, { font: newFont });
-
-      // Update local state
       setSelectedChatRoom((prev) => ({
         ...prev,
         font: newFont,
@@ -74,6 +71,7 @@ const DashBoard = () => {
     }
   }, [selectedChatRoom?.id, db]);
 
+  // eslint-disable-next-line no-unused-vars
   const auth = getAuth();
   // Fetch team members from Firestore
 
@@ -105,6 +103,27 @@ const DashBoard = () => {
   // Fetch chat rooms from Firestore and store them in Redux
 
   // clean up the
+  useEffect(() => {
+    if (selectedChatRoom?.id) {
+      // Reference to the chat room document in Firestore
+      const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+
+      // Set up a listener to get the latest font data
+      const unsubscribe = onSnapshot(chatRoomRef, (docSnapshot) => {
+        if (docSnapshot.exists()) {
+          const chatRoomData = docSnapshot.data();
+          if (chatRoomData.font) {
+            // console.log("font:", chatRoomData.font);
+            setSelectedFont(chatRoomData.font); // Update the font in state
+          }
+        }
+      });
+
+      // Cleanup listener on component unmount or chat room change
+      return () => unsubscribe();
+    }
+  }, [selectedChatRoom?.id, db]);
+
   useEffect(() => {
     let unsubscribe = null;
 
@@ -519,15 +538,18 @@ const DashBoard = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "#f8f8f8", // Optional background color
+              backgroundColor: "rgb(246, 242, 225)", // Optional background color
             }}
           >
-            <img
+            <video
               src={loadingImage}
+              autoPlay
+              loop
+              muted
               alt="start chat "
               width={600}
               style={{ objectFit: "contain" }}
-            />
+            ></video>
           </div>
         )}
 
