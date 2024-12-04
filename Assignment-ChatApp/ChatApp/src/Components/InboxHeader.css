@@ -287,15 +287,19 @@
   color: #4a5568;
   margin-left: 8px;
 }
-.block-div {
+.log-out {
   background-color: #f1f5f9;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 10px;
   text-align: center;
-  margin: 10px 0;
+  margin: 10px 5px;
   font-size: 14px;
   color: #333;
+  cursor: pointer;
+}
+.log-out:hover {
+  background-color: #ff4d4d;
 }
 .chat-messages {
   max-height: 400px;

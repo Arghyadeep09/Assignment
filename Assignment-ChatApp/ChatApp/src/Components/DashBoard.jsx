@@ -8,6 +8,7 @@ import { setTeamMembers } from "./../store/teamMembersSlice";
 import EmojiPicker from "emoji-picker-react";
 import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
 import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
+import { useNavigate } from "react-router-dom";
 import {
   getFirestore,
   collection,
@@ -21,11 +22,12 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
+import SignOut from "./SignOut";
 
 const DashBoard = () => {
   const db = getFirestore(app);
   const user = useSelector((state) => state.auth.user);
-
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   //sconst [teamMembers, setTeamMembers] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
@@ -150,6 +152,7 @@ const DashBoard = () => {
       }
     };
   }, [selectedChatRoom, db]);
+
   useEffect(() => {
     if (selectedChatRoom?.id) {
       // Listen for changes to the selected chat room
@@ -212,6 +215,9 @@ const DashBoard = () => {
   // open chat room on clicking
   const handleMemberClick = async (member) => {
     try {
+      if (!user) {
+        return <div>Please log in to access your dashboard.</div>;
+      }
       if (!user?.uid || !member?.uid) {
         console.error("User or member UID is undefined");
         return;
@@ -364,6 +370,12 @@ const DashBoard = () => {
     setShowEmojiPicker(false);
   };
   console.log(selectedMember);
+  useEffect(() => {
+    if (!user) {
+      // Navigate to home after sign-out
+      navigate("/");
+    }
+  }, [user, navigate]); // Depend on user and navigate
   if (loading) {
     return (
       <div
@@ -483,46 +495,7 @@ const DashBoard = () => {
                     className="profile-picture"
                   />
                   <span className=" profile-name">{user.name}</span>
-                  <div className="color-picker" style={{ marginLeft: "5px" }}>
-                    <label htmlFor="colorPicker">
-                      <box-icon
-                        type="solid"
-                        name="color"
-                        color={selectedChatRoom?.color || "#fff"} // Correct JSX syntax
-                      ></box-icon>
-                    </label>
-                    <input
-                      type="color"
-                      id="colorPicker"
-                      value={selectedChatRoom?.color || "#fff"}
-                      onChange={async (e) => {
-                        const newColor = e.target.value;
-
-                        try {
-                          // Update Firestore
-                          const chatRoomRef = doc(
-                            db,
-                            "chatrooms",
-                            selectedChatRoom.id
-                          );
-                          await updateDoc(chatRoomRef, {
-                            color: newColor,
-                          });
-
-                          // Update local state to reflect color change immediately
-                          setSelectedChatRoom((prev) => ({
-                            ...prev,
-                            color: newColor,
-                          }));
-                        } catch (error) {
-                          console.error(
-                            "Error updating chatroom color:",
-                            error
-                          );
-                        }
-                      }}
-                    />
-                  </div>
+                  <SignOut />
                 </div>
               </div>
             </div>
@@ -564,21 +537,60 @@ const DashBoard = () => {
               <span className="profile-name">{selectedMember.name}</span>
               <i className="fas fa-chevron-down profile-icon"></i>
             </div>
-            <div style={{ fontFamily: selectedFont }}>
-              <div className="font-selector">
-                <label htmlFor="font-dropdown">Choose Font:</label>
-                <select
-                  id="font-dropdown"
-                  className="font-dropdown"
-                  value={selectedFont}
-                  onChange={handleFontChange}
-                >
-                  <option value="Arial">Arial</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Poppins">Poppins</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Courier New">Courier New</option>
-                </select>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ fontFamily: selectedFont }}>
+                <div className="font-selector">
+                  <label htmlFor="font-dropdown">Choose Font:</label>
+                  <select
+                    id="font-dropdown"
+                    className="font-dropdown"
+                    value={selectedFont}
+                    onChange={handleFontChange}
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                  </select>
+                </div>
+              </div>
+              <div className="color-picker" style={{ marginLeft: "5px" }}>
+                <label htmlFor="colorPicker">
+                  <box-icon
+                    type="solid"
+                    name="color"
+                    color={selectedChatRoom?.color || "#fff"} // Correct JSX syntax
+                  ></box-icon>
+                </label>
+                <input
+                  type="color"
+                  id="colorPicker"
+                  value={selectedChatRoom?.color || "#fff"}
+                  onChange={async (e) => {
+                    const newColor = e.target.value;
+
+                    try {
+                      // Update Firestore
+                      const chatRoomRef = doc(
+                        db,
+                        "chatrooms",
+                        selectedChatRoom.id
+                      );
+                      await updateDoc(chatRoomRef, {
+                        color: newColor,
+                      });
+
+                      // Update local state to reflect color change immediately
+                      setSelectedChatRoom((prev) => ({
+                        ...prev,
+                        color: newColor,
+                      }));
+                    } catch (error) {
+                      console.error("Error updating chatroom color:", error);
+                    }
+                  }}
+                />
               </div>
             </div>
           </div>
