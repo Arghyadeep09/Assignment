@@ -1,7 +1,6 @@
 import { getAuth, signOut } from "firebase/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { clearUser } from "./../store/authSlice";
-import { persistor } from "./../store/store";
 import { useNavigate } from "react-router-dom";
 import { app } from "../firebaseConfig";
 import "./Logout.css";
