@@ -5,6 +5,7 @@ import { getAuth } from "firebase/auth";
 import { useState, useEffect } from "react";
 import { app } from "../firebaseConfig";
 import { setTeamMembers } from "./../store/teamMembersSlice";
+import EmojiPicker from "emoji-picker-react";
 import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
 import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
 import { useNavigate } from "react-router-dom";
@@ -19,14 +20,9 @@ import {
   onSnapshot,
   orderBy,
   serverTimestamp,
-
-}
-  from "firebase/firestore";
-import Sidebar from "./Sidebar";
-import ChatHeader from "./ChatHeader";
-import ChatInput from "./ChatInput";
-import ChatMessages from "./ChatMessages";
-import ChatProfileHeader from "./ChatProfileHeader";
+  updateDoc,
+} from "firebase/firestore";
+import SignOut from "./SignOut";
 
 const DashBoard = () => {
   const db = getFirestore(app);
@@ -36,8 +32,7 @@ const DashBoard = () => {
   //sconst [teamMembers, setTeamMembers] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
-  const [selectedChatRoom, setSelectedChatRoom] = useState(null); //background color
-  // text color
+  const [selectedChatRoom, setSelectedChatRoom] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,8 +41,23 @@ const DashBoard = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sidebarActive, setSidebarActive] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
-  const [timeStampColor, setTimeStampColor] = useState(" #718096");
   console.log("selected font: " + selectedFont);
+
+  const handleFontChange = async (e) => {
+    const newFont = e.target.value;
+
+    try {
+      const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+      await updateDoc(chatRoomRef, { font: newFont });
+      setSelectedChatRoom((prev) => ({
+        ...prev,
+        font: newFont,
+      }));
+    } catch (error) {
+      console.error("Error updating chatroom font:", error);
+      alert("Failed to update font. Please try again.");
+    }
+  };
   useEffect(() => {
     if (selectedChatRoom?.id) {
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
@@ -158,25 +168,13 @@ const DashBoard = () => {
               color: chatRoomData.color,
             }));
           }
-          if (chatRoomData.textColor !== selectedChatRoom.textColor) {
-            setSelectedChatRoom((prev) => ({
-              ...prev,
-              textColor: chatRoomData.textColor,
-            }));
-            console.log("color" + chatRoomData.textColor);
-          }
         }
       });
 
       // Cleanup listener on unmount or chat room change
       return () => unsubscribe();
     }
-  }, [
-    selectedChatRoom?.id,
-    db,
-    selectedChatRoom?.textColor,
-    selectedChatRoom?.color,
-  ]);
+  }, [selectedChatRoom?.id, db]);
 
   console.log(useSelector((state) => state.auth.user));
   const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
@@ -197,14 +195,20 @@ const DashBoard = () => {
           const nameA = a.name.toLowerCase();
           const nameB = b.name.toLowerCase();
           const query = searchQuery.toLowerCase();
+
           const nameAIndex = nameA.indexOf(query);
           const nameBIndex = nameB.indexOf(query);
 
+          // Prioritize matches at the beginning of the name
           if (nameAIndex !== nameBIndex) return nameAIndex - nameBIndex;
+
+          // If name matches equally, compare email matches
           const emailA = a.email.toLowerCase();
           const emailB = b.email.toLowerCase();
+
           const emailAIndex = emailA.indexOf(query);
           const emailBIndex = emailB.indexOf(query);
+
           return emailAIndex - emailBIndex;
         })
     : sortedTeamMembers; // Show all team members when search is empty
@@ -267,7 +271,6 @@ const DashBoard = () => {
           participants: [user.uid, member.uid], // Array of participant IDs
           color: "#ffffff",
           font: "Arial",
-          textColor: "#000000",
           createdAt: serverTimestamp(),
         });
 
@@ -362,9 +365,9 @@ const DashBoard = () => {
       console.error("Error sending message:", error);
     }
   };
-  const handleEmojiSelect = (emoji) => {
-    setNewMessage((prev) => prev + emoji);
-    setShowEmojiPicker(false); // Close the emoji picker
+  const handleEmojiClick = (emojiObject) => {
+    setNewMessage((prev) => prev + emojiObject.emoji);
+    setShowEmojiPicker(false);
   };
   console.log(selectedMember);
   useEffect(() => {
@@ -398,38 +401,117 @@ const DashBoard = () => {
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <Sidebar
-        sidebarActive={sidebarActive}
-        setSidebarActive={setSidebarActive}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        filteredAndSortedTeamMembers={filteredAndSortedTeamMembers}
-        recentChats={recentChats}
-        loading={loading}
-        error={error}
-        handleMemberClick={handleMemberClick}
-      />
+      <div className={`sidebar ${sidebarActive ? "active" : ""}`}>
+        {sidebarActive && (
+          <box-icon
+            name="x"
+            onClick={() => setSidebarActive(!sidebarActive)}
+          ></box-icon>
+        )}
+        <h2 className="app-title">Chatter</h2>
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search for team members..."
+            className="search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Team Members */}
+        {/* Team Members */}
+        <h3>Team Members</h3>
+        <div className="team-members">
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : filteredAndSortedTeamMembers.length > 0 ? (
+            filteredAndSortedTeamMembers.map((member) => (
+              <div
+                key={member.uid}
+                className="team-member"
+                onClick={() => handleMemberClick(member)}
+              >
+                <img src={member.avatar} alt={member.name} className="avatar" />
+                <div>
+                  <p>{member.name}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No team members found</p>
+          )}
+        </div>
+
+        {/* Recent Chats */}
+        <h3>Recent Chats</h3>
+        <div className="recent-chats">
+          {recentChats.length > 0 ? (
+            recentChats.map((member) => (
+              <div
+                key={member.uid}
+                className="team-member"
+                onClick={() => handleMemberClick(member)}
+              >
+                <img src={member.avatar} alt={member.name} className="avatar" />
+                <div className="recent-chat-info">
+                  <p>{member.name}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>No recent chats found</p>
+          )}
+        </div>
+      </div>
 
       {/* Main Chat Section */}
       <div className="main-chat">
-        {/* Top Chat Header */}
-        <ChatHeader
-          user={user}
-          sidebarActive={sidebarActive}
-          setSidebarActive={setSidebarActive}
-          selectedChatRoom={selectedChatRoom}
-        />
-
-        {/* If no member is selected, show placeholder */}
-        {selectedMember == null ? (
+        <div className="chat-header">
+          <div className="header-container">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <div className="menu-icon">
+                <box-icon
+                  name="menu"
+                  onClick={() => setSidebarActive(!sidebarActive)}
+                ></box-icon>
+              </div>
+              <h2>Messages</h2>
+            </div>
+            <div className="chat-header-right">
+              <div className="header-right">
+                <div className="notification-icon"></div>
+                <div className="profile">
+                  <img
+                    src="http://placehold.co/40x40"
+                    alt="profile of user"
+                    className="profile-picture"
+                  />
+                  <span className=" profile-name">{user.name}</span>
+                  <SignOut />
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
+        </div>
+        {selectedMember == null && (
           <div
             style={{
               height: "90vh",
               width: "100%",
+              overflow: "hidden",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: "rgb(246, 242, 225)",
+              backgroundColor: "rgb(246, 242, 225)", // Optional background color
             }}
           >
             <video
@@ -437,41 +519,154 @@ const DashBoard = () => {
               autoPlay
               loop
               muted
-              alt="Start Chat"
+              alt="start chat "
               width={600}
               style={{ objectFit: "contain" }}
             ></video>
           </div>
-        ) : (
-          <>
-            {/* Member-Specific Header */}
-            <ChatProfileHeader
-              selectedMember={selectedMember}
-              selectedChatRoom={selectedChatRoom}
-              selectedFont={selectedFont}
-              setSelectedFont={setSelectedFont}
-              setTimeStampColor={setTimeStampColor}
+        )}
+
+        {selectedMember !== null && (
+          <div className="chat-header">
+            <div className="profile">
+              <img
+                src="http://placehold.co/40x40"
+                alt="Profile"
+                className="profile-picture"
+              />
+              <span className="profile-name">{selectedMember.name}</span>
+              <i className="fas fa-chevron-down profile-icon"></i>
+            </div>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ fontFamily: selectedFont }}>
+                <div className="font-selector">
+                  <label htmlFor="font-dropdown">Choose Font:</label>
+                  <select
+                    id="font-dropdown"
+                    className="font-dropdown"
+                    value={selectedFont}
+                    onChange={handleFontChange}
+                  >
+                    <option value="Arial">Arial</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                  </select>
+                </div>
+              </div>
+              <div className="color-picker" style={{ marginLeft: "5px" }}>
+                <label htmlFor="colorPicker">
+                  <box-icon
+                    type="solid"
+                    name="color"
+                    color={selectedChatRoom?.color || "#fff"} // Correct JSX syntax
+                  ></box-icon>
+                </label>
+                <input
+                  type="color"
+                  id="colorPicker"
+                  value={selectedChatRoom?.color || "#fff"}
+                  onChange={async (e) => {
+                    const newColor = e.target.value;
+
+                    try {
+                      // Update Firestore
+                      const chatRoomRef = doc(
+                        db,
+                        "chatrooms",
+                        selectedChatRoom.id
+                      );
+                      await updateDoc(chatRoomRef, {
+                        color: newColor,
+                      });
+
+                      // Update local state to reflect color change immediately
+                      setSelectedChatRoom((prev) => ({
+                        ...prev,
+                        color: newColor,
+                      }));
+                    } catch (error) {
+                      console.error("Error updating chatroom color:", error);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Chat Messages */}
+
+        {selectedMember !== null && (
+          <div
+            className="chat-messages"
+            style={{
+              backgroundColor: selectedChatRoom?.color || "#ffffff", // Default white
+              padding: "10px",
+              borderRadius: "8px",
+              fontFamily: selectedFont,
+            }}
+          >
+            {chatMessages.map((message, index) => (
+              <div
+                key={index}
+                className={`message ${
+                  message.senderId === user.uid ? "sent" : "received"
+                }`}
+              >
+                <p className="message-text">{message.text}</p>
+                <span className="message-time">
+                  {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Message Input */}
+        {selectedMember !== null && (
+          <div className="chat-input" style={{ position: "relative" }}>
+            {/* Emoji Picker Toggle Button */}
+            <button
+              onClick={() => setShowEmojiPicker((prev) => !prev)}
+              className="emoji-picker-button"
+              style={{ marginRight: "10px" }}
+            >
+              <box-icon name="happy" size="lg"></box-icon>
+            </button>
+
+            {/* Emoji Picker Component */}
+            {showEmojiPicker && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "50px",
+                  left: "10px",
+                  zIndex: 100,
+                  background: "white",
+                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+                  borderRadius: "8px",
+                }}
+              >
+                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              </div>
+            )}
+
+            {/* Message Input Field */}
+            <input
+              type="text"
+              placeholder="Enter your message here..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
             />
 
-            {/* Chat Messages */}
-            <ChatMessages
-              chatMessages={chatMessages}
-              user={user}
-              selectedChatRoom={selectedChatRoom}
-              timeStampColor={timeStampColor}
-              selectedFont={selectedFont}
-            />
-
-            {/* Chat Input */}
-            <ChatInput
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              sendMessage={sendMessage}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-              handleEmojiSelect={handleEmojiSelect}
-            />
-          </>
+            {/* Send Button */}
+            <button onClick={sendMessage}>
+              <box-icon name="send" size="lg" color="#ff4d4d"></box-icon>
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -479,4 +674,4 @@ const DashBoard = () => {
 };
 
 export default DashBoard;
-
+//block

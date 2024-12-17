@@ -9,7 +9,7 @@ const persistConfig = {
   key: "root",
   storage,
 };
- 
+
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({

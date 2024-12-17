@@ -185,7 +185,7 @@
 
 .message-time {
   font-size: 12px;
-  /* color: #718096; */
+  color: #718096;
   margin-top: 5px;
   text-align: right;
 }
@@ -311,6 +311,7 @@
   padding: 10px;
   margin-bottom: 8px;
   border-radius: 8px;
+  color: white; /* Default text color */
 }
 
 .message.sent {
