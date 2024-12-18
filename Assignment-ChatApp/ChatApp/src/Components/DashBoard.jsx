@@ -10,6 +10,7 @@ import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
 import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
 import { useNavigate } from "react-router-dom";
 import { BsFileFont } from "react-icons/bs";
+import { IoIosOptions } from "react-icons/io";
 
 import {
   getFirestore,
@@ -24,11 +25,12 @@ import {
   serverTimestamp,
   updateDoc,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
 import SignOut from "./SignOut";
 import ColorPicker from "./ColorPicker";
 import { MdArrowBackIosNew } from "react-icons/md";
-import { MdDeleteOutline } from "react-icons/md";
+import { MdDeleteOutline, MdClose } from "react-icons/md";
 
 const DashBoard = () => {
   const db = getFirestore(app);
@@ -49,6 +51,63 @@ const DashBoard = () => {
   const [selectedFont, setSelectedFont] = useState("Arial");
   const [timeStampColor, setTimeStampColor] = useState(" #718096");
   const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [isOpen, setIsOpen] = useState(true);
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen);
+  };
+  const handleTyping = async (isTyping) => {
+    if (!selectedChatRoom) return;
+
+    try {
+      const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+      await updateDoc(chatRoomRef, {
+        [`typing.${user.uid}`]: isTyping,
+      });
+    } catch (error) {
+      console.error("Error updating typing status:", error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    //   setMessage(e.target.value); // Assume `setMessage` updates the input value state
+
+    // Notify Firestore that the user is typing
+    if (!isTyping) {
+      setIsTyping(true);
+      handleTyping(true);
+    }
+
+    // Stop typing after 3 seconds of inactivity
+    if (typingTimeout) clearTimeout(typingTimeout);
+    const timeout = setTimeout(() => {
+      setIsTyping(false);
+      handleTyping(false);
+    }, 3000);
+    setTypingTimeout(timeout);
+  };
+  useEffect(() => {
+    if (!selectedChatRoom) return;
+
+    const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+
+    const unsubscribe = onSnapshot(chatRoomRef, (snapshot) => {
+      const data = snapshot.data();
+      if (data?.typing) {
+        const typingUsers = Object.entries(data.typing)
+          .filter(([uid, isTyping]) => isTyping && uid !== user.uid)
+          .map(([uid]) => uid);
+
+        setTypingUsers(typingUsers); // Assume this is a state to store typing users
+      }
+    });
+
+    return () => unsubscribe();
+  }, [selectedChatRoom, user]);
+
   const handleDeleteChat = async () => {
     if (selectedChatRoom) {
       try {
@@ -363,7 +422,16 @@ const DashBoard = () => {
           textColor: "#000000",
           createdAt: serverTimestamp(),
         });
-
+        await setDoc(
+          doc(db, "chatrooms", newChatRoomRef.id),
+          {
+            typing: {
+              [user.uid]: false, // Initially, no one is typing
+              [member.uid]: false,
+            },
+          },
+          { merge: true } // Ensure it doesn’t overwrite other fields
+        );
         // console.log("Created new chat room:", newChatRoomRef.id);
 
         setSelectedChatRoom({
@@ -639,47 +707,69 @@ const DashBoard = () => {
                 alt="Profile"
                 className="profile-picture"
               />
-              <span className="profile-name">{selectedMember.name}</span>
-              <i className="fas fa-chevron-down profile-icon"></i>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ fontFamily: selectedFont }}>
-                <div
-                  className="font-selector"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    paddingRight: "10px",
-                  }}
-                >
-                  <label
-                    htmlFor="font-dropdown"
-                    onClick={handleIconClick}
-                    style={{ display: "flex", alignItems: "center" }}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span className="profile-name">{selectedMember.name}</span>
+                <i className="fas fa-chevron-down profile-icon"></i>
+                {typingUsers.includes(selectedMember.uid) && (
+                  <span
+                    style={{
+                      paddingTop: "5px",
+                      paddingLeft: "10px",
+                      fontSize: "14px",
+                      color: "gray",
+                    }}
                   >
-                    <BsFileFont />
-                  </label>
-                  {isDropdownVisible && (
-                    <select
-                      id="font-dropdown"
-                      className="font-dropdown"
-                      value={selectedFont}
-                      onChange={handleFontChange}
+                    typing...
+                  </span>
+                )}
+              </div>
+            </div>
+            {isOpen ? (
+              <IoIosOptions
+                size={24}
+                style={{ cursor: "pointer" }}
+                onClick={handleToggle}
+              />
+            ) : (
+              <div
+                className="features"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div style={{ fontFamily: selectedFont }}>
+                  <div
+                    className="font-selector"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      paddingRight: "10px",
+                    }}
+                  >
+                    <label
+                      htmlFor="font-dropdown"
+                      onClick={handleIconClick}
+                      style={{ display: "flex", alignItems: "center" }}
                     >
-                      <option value="Arial">Arial</option>
-                      <option value="Roboto">Roboto</option>
-                      <option value="Poppins">Poppins</option>
-                      <option value="Times New Roman">Times New Roman</option>
-                      <option value="Courier New">Courier New</option>
-                    </select>
-                  )}
-                  {/* <select
+                      <BsFileFont />
+                    </label>
+                    {isDropdownVisible && (
+                      <select
+                        id="font-dropdown"
+                        className="font-dropdown"
+                        value={selectedFont}
+                        onChange={handleFontChange}
+                      >
+                        <option value="Arial">Arial</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                      </select>
+                    )}
+                    {/* <select
                     id="font-dropdown"
                     className="font-dropdown"
                     value={selectedFont}
@@ -691,9 +781,9 @@ const DashBoard = () => {
                     <option value="Times New Roman">Times New Roman</option>
                     <option value="Courier New">Courier New</option>
                   </select> */}
+                  </div>
                 </div>
-              </div>
-              {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
+                {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
                 <label htmlFor="colorPicker">
                   <box-icon
                     type="solid"
@@ -730,19 +820,25 @@ const DashBoard = () => {
                   }}
                 />
               </div> */}
-              <ColorPicker
-                db={db}
-                selectedChatRoom={selectedChatRoom}
-                setSelectedChatRoom={setSelectedChatRoom}
-                setTimeStampColor={setTimeStampColor}
-              />
-              <div
-                onClick={handleDeleteChat}
-                style={{ width: "40px", padding: "15px" }}
-              >
-                <MdDeleteOutline size={20} />
+                <ColorPicker
+                  db={db}
+                  selectedChatRoom={selectedChatRoom}
+                  setSelectedChatRoom={setSelectedChatRoom}
+                  setTimeStampColor={setTimeStampColor}
+                />
+                <div
+                  onClick={handleDeleteChat}
+                  style={{ width: "40px", padding: "15px" }}
+                >
+                  <MdDeleteOutline size={20} />
+                </div>
+                <MdClose
+                  size={24}
+                  style={{ cursor: "pointer" }}
+                  onClick={handleToggle}
+                />
               </div>
-            </div>
+            )}
           </div>
         )}
         {/* Chat Messages */}
@@ -819,9 +915,12 @@ const DashBoard = () => {
               type="text"
               placeholder="Enter your message here..."
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) => {
+                setNewMessage(e.target.value); // Update the message state
+                handleInputChange(e); // Trigger typing status logic
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+                if (e.key === "Enter") sendMessage(); // Send message on Enter key
               }}
             />
 
