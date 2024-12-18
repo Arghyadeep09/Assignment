@@ -4,7 +4,7 @@
 import "./../styles/Signup.css";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setUser } from "../store/authSlice";
 import {
   createUserWithEmailAndPassword,
@@ -14,6 +14,8 @@ import {
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import { app } from "../firebaseConfig";
+import { toast } from "react-toastify"; // Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 const SignUp = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -34,7 +36,7 @@ const SignUp = () => {
   const handleSignUp = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match!");
+      toast.error("Passwords do not match!"); // Show error using toast
       return;
     }
     try {
@@ -49,7 +51,7 @@ const SignUp = () => {
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`,
       });
-      console.log(userCredential);
+      //console.log(userCredential);
 
       dispatch(
         setUser({
@@ -70,14 +72,21 @@ const SignUp = () => {
           avatar: "https://placehold.co/40x40",
           createdAt: new Date().toISOString(),
         });
-        console.log("New user added to Firestore");
+        //console.log("New user added to Firestore");
       }
 
-      console.log("User signed up:", userCredential.user);
-      console.log("User full name:", userCredential.user.displayName);
+      //console.log("User signed up:", userCredential.user);
+      //console.log("User full name:", userCredential.user.displayName);
       navigate("/DashBoard");
-    } catch (error) {
-      console.error("Error signing up:", error.message);
+    } catch (error) { 
+       if (error.code === "auth/email-already-in-use") {
+         // Specific check for email already in use error
+         toast.error("Email is already in use! Please try another email.");
+       } else {
+         // Handle other errors generically
+         toast.error(`Error: ${error.message}`);
+       }
+     //console.error("Error signing up:", error.message);
     }
   };
 
@@ -140,7 +149,7 @@ const SignUp = () => {
           <button className="signup-btn">Sign up</button>
         </form>
 
-        <p className="signin-link">
+        <p className="signin-link" style={{ color: "#fff" }}>
           Already have an account?{" "}
           <button
             className="btn"

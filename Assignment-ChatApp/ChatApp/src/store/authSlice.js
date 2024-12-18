@@ -1,3 +1,4 @@
+// authSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 
 const authSlice = createSlice({
@@ -8,17 +9,18 @@ const authSlice = createSlice({
   },
   reducers: {
     setUser: (state, action) => {
-      state.user = action.payload; 
+      state.user = action.payload; // Update the user
     },
     setRememberMe: (state, action) => {
-      state.rememberMe = action.payload;
+      state.rememberMe = action.payload; // Update the rememberMe state
     },
     clearUser: (state) => {
-      state.user = null;
+      state.user = null; // Clear user information
+      state.rememberMe = false; // Reset rememberMe state
     },
   },
 });
 
 export const { setUser, clearUser, setRememberMe } = authSlice.actions;
-export default authSlice.reducer; // Export the reducer directly
-export { authSlice }; // Named export for the slice itself
+export default authSlice.reducer;
+

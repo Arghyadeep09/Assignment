@@ -9,6 +9,8 @@ import EmojiPicker from "emoji-picker-react";
 import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
 import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
 import { useNavigate } from "react-router-dom";
+import { BsFileFont } from "react-icons/bs";
+
 import {
   getFirestore,
   collection,
@@ -21,8 +23,12 @@ import {
   orderBy,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import SignOut from "./SignOut";
+import ColorPicker from "./ColorPicker";
+import { MdArrowBackIosNew } from "react-icons/md";
+import { MdDeleteOutline } from "react-icons/md";
 
 const DashBoard = () => {
   const db = getFirestore(app);
@@ -41,10 +47,42 @@ const DashBoard = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [sidebarActive, setSidebarActive] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
-  console.log("selected font: " + selectedFont);
+  const [timeStampColor, setTimeStampColor] = useState(" #718096");
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+  const handleDeleteChat = async () => {
+    if (selectedChatRoom) {
+      try {
+        const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
+
+        // Delete all messages in the chat room
+        const messagesRef = collection(chatRoomRef, "messages");
+        const messagesSnapshot = await getDocs(messagesRef);
+        messagesSnapshot.forEach(async (messageDoc) => {
+          await deleteDoc(doc(messagesRef, messageDoc.id)); // Delete each message
+        });
+
+        // Finally, delete the chat room itself
+        await deleteDoc(chatRoomRef);
+
+        // Update state to remove the deleted chat room
+        setRecentChats((prevChats) =>
+          prevChats.filter((chat) => chat.uid !== selectedChatRoom.uid)
+        );
+        setChatMessages([]);
+        setSelectedChatRoom(null); // Clear selected chat room after deletion
+      } catch (error) {
+        console.error("Error deleting chat:", error);
+        setError("Failed to delete chat");
+      }
+    }
+  };
+  const handleIconClick = () => {
+    setDropdownVisible((prev) => !prev);
+  };
 
   const handleFontChange = async (e) => {
     const newFont = e.target.value;
+    setDropdownVisible(false);
 
     try {
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
@@ -54,10 +92,49 @@ const DashBoard = () => {
         font: newFont,
       }));
     } catch (error) {
-      console.error("Error updating chatroom font:", error);
+      // console.error("Error updating chatroom font:", error);
       alert("Failed to update font. Please try again.");
     }
   };
+
+  useEffect(() => {
+    // Ensure user is authenticated
+    if (!user) {
+      navigate("/");
+      return;
+    }
+
+    // Create a custom history state
+    const dashboardState = { page: "dashboard" };
+    window.history.replaceState(dashboardState, "");
+
+    // Handler for back button
+    const handleBackNavigation = (event) => {
+      // Prevent default back navigation
+      event.preventDefault();
+
+      // If somehow back is pressed, go to a specific route
+      navigate("/");
+    };
+
+    // Add event listeners
+    window.addEventListener("popstate", handleBackNavigation);
+
+    // Modify browser history to prevent back navigation
+    const blockBack = () => {
+      window.history.pushState(dashboardState, "", window.location.href);
+    };
+
+    // Additional listeners to ensure back is blocked
+    window.addEventListener("popstate", blockBack);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("popstate", handleBackNavigation);
+      window.removeEventListener("popstate", blockBack);
+    };
+  }, [navigate, user]);
+
   useEffect(() => {
     if (selectedChatRoom?.id) {
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
@@ -89,12 +166,12 @@ const DashBoard = () => {
             avatar: doc.data().avatar || "https://placehold.co/40x40",
           }))
           .filter((member) => member.uid !== user.uid); // Exclude the current user
-        console.log(fetchedUsers);
+        // console.log(fetchedUsers);
 
         dispatch(setTeamMembers(fetchedUsers));
         setLoading(false);
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         setError(error.message);
         setLoading(false);
       }
@@ -168,13 +245,25 @@ const DashBoard = () => {
               color: chatRoomData.color,
             }));
           }
+          if (chatRoomData.textColor !== selectedChatRoom.textColor) {
+            setSelectedChatRoom((prev) => ({
+              ...prev,
+              textColor: chatRoomData.textColor,
+            }));
+            //console.log("color" + chatRoomData.textColor);
+          }
         }
       });
 
       // Cleanup listener on unmount or chat room change
       return () => unsubscribe();
     }
-  }, [selectedChatRoom?.id, db]);
+  }, [
+    selectedChatRoom?.id,
+    db,
+    selectedChatRoom?.textColor,
+    selectedChatRoom?.color,
+  ]);
 
   console.log(useSelector((state) => state.auth.user));
   const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
@@ -219,16 +308,16 @@ const DashBoard = () => {
         return <div>Please log in to access your dashboard.</div>;
       }
       if (!user?.uid || !member?.uid) {
-        console.error("User or member UID is undefined");
+        //  console.error("User or member UID is undefined");
         return;
       }
 
       // Generate a consistent unique key for the chat room based on participant IDs
       const participantIds = [user.uid, member.uid].sort().join("-");
-      console.log("Generated participantIds:", participantIds);
+      // console.log("Generated participantIds:", participantIds);
 
       if (!participantIds) {
-        console.error("Invalid participantIds");
+        // console.error("Invalid participantIds");
         return;
       }
 
@@ -243,7 +332,7 @@ const DashBoard = () => {
       if (!querySnapshot.empty) {
         // Chat room exists
         const chatRoom = querySnapshot.docs[0].data();
-        console.log("Chat room exists:", chatRoom);
+        // console.log("Chat room exists:", chatRoom);
 
         setSelectedChatRoom({
           id: querySnapshot.docs[0].id,
@@ -271,10 +360,11 @@ const DashBoard = () => {
           participants: [user.uid, member.uid], // Array of participant IDs
           color: "#ffffff",
           font: "Arial",
+          textColor: "#000000",
           createdAt: serverTimestamp(),
         });
 
-        console.log("Created new chat room:", newChatRoomRef.id);
+        // console.log("Created new chat room:", newChatRoomRef.id);
 
         setSelectedChatRoom({
           id: newChatRoomRef.id,
@@ -284,7 +374,7 @@ const DashBoard = () => {
         setChatMessages([]); // No messages in a new chat room
       }
     } catch (error) {
-      console.error("Error fetching or creating chat room:", error);
+      // console.error("Error fetching or creating chat room:", error);
     }
   };
 
@@ -316,7 +406,7 @@ const DashBoard = () => {
         // Wait for all promises to complete
         await Promise.all(chatPromises);
       } catch (error) {
-        console.error("Error fetching recent chats:", error);
+        // console.error("Error fetching recent chats:", error);
         setError(error.message);
       }
     };
@@ -333,11 +423,11 @@ const DashBoard = () => {
     if (newMessage.trim() === "") {
       return; // Do not send empty messages
     }
-    console.log(selectedChatRoom.id);
-    console.log(selectedChatRoom.participantIds);
+    // console.log(selectedChatRoom.id);
+    // console.log(selectedChatRoom.participantIds);
 
     if (!selectedChatRoom) {
-      console.error("No chat room selected.");
+      // console.error("No chat room selected.");
       return;
     }
 
@@ -348,7 +438,7 @@ const DashBoard = () => {
         .trim();
 
       if (!receiverId) {
-        console.error("Receiver ID could not be determined.");
+        // console.error("Receiver ID could not be determined.");
         return;
       }
 
@@ -362,14 +452,14 @@ const DashBoard = () => {
       // Clear the input field after sending
       setNewMessage("");
     } catch (error) {
-      console.error("Error sending message:", error);
+      // console.error("Error sending message:", error);
     }
   };
   const handleEmojiClick = (emojiObject) => {
     setNewMessage((prev) => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
   };
-  console.log(selectedMember);
+  // console.log(selectedMember);
   useEffect(() => {
     if (!user) {
       // Navigate to home after sign-out
@@ -380,7 +470,7 @@ const DashBoard = () => {
     return (
       <div
         style={{
-          height: "100vh",
+          height: "400vh",
           width: "100vw",
           display: "flex",
           alignItems: "center",
@@ -408,6 +498,7 @@ const DashBoard = () => {
             onClick={() => setSidebarActive(!sidebarActive)}
           ></box-icon>
         )}
+        <div></div>
         <h2 className="app-title">Chatter</h2>
         <div className="search-box">
           <input
@@ -421,8 +512,8 @@ const DashBoard = () => {
 
         {/* Team Members */}
         {/* Team Members */}
-        <h3>Team Members</h3>
-        <div className="team-members">
+        <h3 style={{ marginBottom: "10px" }}>Team Members</h3>
+        <div className="team-members   scrollable">
           {loading ? (
             <p>Loading...</p>
           ) : error ? (
@@ -433,6 +524,10 @@ const DashBoard = () => {
                 key={member.uid}
                 className="team-member"
                 onClick={() => handleMemberClick(member)}
+                style={{
+                  backgroundColor:
+                    selectedMember?.uid === member.uid ? "#f1f5f9" : "#f9f9f9",
+                }}
               >
                 <img src={member.avatar} alt={member.name} className="avatar" />
                 <div>
@@ -447,13 +542,17 @@ const DashBoard = () => {
 
         {/* Recent Chats */}
         <h3>Recent Chats</h3>
-        <div className="recent-chats">
+        <div className="recent-chats scrollable">
           {recentChats.length > 0 ? (
             recentChats.map((member) => (
               <div
                 key={member.uid}
                 className="team-member"
                 onClick={() => handleMemberClick(member)}
+                style={{
+                  backgroundColor:
+                    selectedMember?.uid === member.uid ? "#f1f5f9" : "#f9f9f9",
+                }}
               >
                 <img src={member.avatar} alt={member.name} className="avatar" />
                 <div className="recent-chat-info">
@@ -529,6 +628,12 @@ const DashBoard = () => {
         {selectedMember !== null && (
           <div className="chat-header">
             <div className="profile">
+              <span
+                style={{ marginRight: "10px" }}
+                onClick={() => setSelectedMember(null)}
+              >
+                <MdArrowBackIosNew />
+              </span>
               <img
                 src="http://placehold.co/40x40"
                 alt="Profile"
@@ -537,11 +642,44 @@ const DashBoard = () => {
               <span className="profile-name">{selectedMember.name}</span>
               <i className="fas fa-chevron-down profile-icon"></i>
             </div>
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <div style={{ fontFamily: selectedFont }}>
-                <div className="font-selector">
-                  <label htmlFor="font-dropdown">Choose Font:</label>
-                  <select
+                <div
+                  className="font-selector"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    paddingRight: "10px",
+                  }}
+                >
+                  <label
+                    htmlFor="font-dropdown"
+                    onClick={handleIconClick}
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    <BsFileFont />
+                  </label>
+                  {isDropdownVisible && (
+                    <select
+                      id="font-dropdown"
+                      className="font-dropdown"
+                      value={selectedFont}
+                      onChange={handleFontChange}
+                    >
+                      <option value="Arial">Arial</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Times New Roman">Times New Roman</option>
+                      <option value="Courier New">Courier New</option>
+                    </select>
+                  )}
+                  {/* <select
                     id="font-dropdown"
                     className="font-dropdown"
                     value={selectedFont}
@@ -552,10 +690,10 @@ const DashBoard = () => {
                     <option value="Poppins">Poppins</option>
                     <option value="Times New Roman">Times New Roman</option>
                     <option value="Courier New">Courier New</option>
-                  </select>
+                  </select> */}
                 </div>
               </div>
-              <div className="color-picker" style={{ marginLeft: "5px" }}>
+              {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
                 <label htmlFor="colorPicker">
                   <box-icon
                     type="solid"
@@ -587,10 +725,22 @@ const DashBoard = () => {
                         color: newColor,
                       }));
                     } catch (error) {
-                      console.error("Error updating chatroom color:", error);
+                      // console.error("Error updating chatroom color:", error);
                     }
                   }}
                 />
+              </div> */}
+              <ColorPicker
+                db={db}
+                selectedChatRoom={selectedChatRoom}
+                setSelectedChatRoom={setSelectedChatRoom}
+                setTimeStampColor={setTimeStampColor}
+              />
+              <div
+                onClick={handleDeleteChat}
+                style={{ width: "40px", padding: "15px" }}
+              >
+                <MdDeleteOutline size={20} />
               </div>
             </div>
           </div>
@@ -605,6 +755,7 @@ const DashBoard = () => {
               padding: "10px",
               borderRadius: "8px",
               fontFamily: selectedFont,
+              color: selectedChatRoom?.textColor || "#000000",
             }}
           >
             {chatMessages.map((message, index) => (
@@ -614,8 +765,16 @@ const DashBoard = () => {
                   message.senderId === user.uid ? "sent" : "received"
                 }`}
               >
-                <p className="message-text">{message.text}</p>
-                <span className="message-time">
+                <p
+                  className="message-text"
+                  style={{ color: selectedChatRoom?.textColor || "#000000" }}
+                >
+                  {message.text}
+                </p>
+                <span
+                  className="message-time"
+                  style={{ color: timeStampColor }}
+                >
                   {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
                 </span>
               </div>
@@ -629,9 +788,13 @@ const DashBoard = () => {
             <button
               onClick={() => setShowEmojiPicker((prev) => !prev)}
               className="emoji-picker-button"
-              style={{ marginRight: "10px" }}
+              style={{
+                marginRight: "10px",
+                backgroundColor: "transparent",
+                border: "none",
+              }}
             >
-              <box-icon name="happy" size="lg"></box-icon>
+              <box-icon name="happy" size="md"></box-icon>
             </button>
 
             {/* Emoji Picker Component */}
@@ -663,8 +826,14 @@ const DashBoard = () => {
             />
 
             {/* Send Button */}
-            <button onClick={sendMessage}>
-              <box-icon name="send" size="lg" color="#ff4d4d"></box-icon>
+            <button
+              onClick={sendMessage}
+              style={{
+                backgroundColor: "transparent",
+                border: "none",
+              }}
+            >
+              <box-icon name="send" size="md" color="#ff4d4d"></box-icon>
             </button>
           </div>
         )}
@@ -672,6 +841,5 @@ const DashBoard = () => {
     </div>
   );
 };
-
 export default DashBoard;
 //block

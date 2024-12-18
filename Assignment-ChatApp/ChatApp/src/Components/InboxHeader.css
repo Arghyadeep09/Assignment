@@ -53,7 +53,7 @@
 .team-members {
   margin-bottom: 10px;
   overflow-y: auto;
-  height: 35%;
+  height: 30%;
   max-height: 300px; /* Adjust height as needed */
   overflow-y: scroll;
   -ms-overflow-style: none; /*For Internet Explorer and Edge*/
@@ -319,6 +319,7 @@
   text-align: right;
 }
 
+
 .message.received {
   background-color: rgba(255, 255, 255, 0.1); /* Adjust for dark themes */
   text-align: left;
@@ -361,4 +362,11 @@
 
   z-index: 100;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 600px) {
+  video {
+    max-width: 100%;
+    height: auto;
+  }
 }

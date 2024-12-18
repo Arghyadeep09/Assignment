@@ -73,7 +73,9 @@
   margin-top: 25px;
   transition: background-color 0.3s;
 }
-
+.g:hover {
+  background-color: #e63939;
+}
 .auth-btn:hover {
   background-color: #e63939;
 }
@@ -130,11 +132,11 @@
   color: #ff4d4d;
   cursor: pointer;
 }
-body {
+/* body {
   background-image: linear-gradient(#4dc9e6, #210cae);
-}
+} */
 .google :hover {
-  color: #ffffff;
+  color: #850000;
   cursor: pointer;
 }
 .error-message {

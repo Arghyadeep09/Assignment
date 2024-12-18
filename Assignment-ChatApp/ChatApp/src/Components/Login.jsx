@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { setUser, setRememberMe } from "../store/authSlice";
+import { toast } from "react-toastify"; // Import Toastify
+import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
 import "./../styles/Login.css";
 import "boxicons";
 import {
@@ -49,10 +51,12 @@ const Login = () => {
         })
       );
       dispatch(setRememberMe(rememberMe));
+      // updatePersistConfig(rememberMe);
       navigate("/DashBoard");
-      console.log("User logged in:", userCredential.user);
+      // console.log("User logged in:", userCredential.user);
     } catch (error) {
       setError("Invalid email or password. Please try again.");
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false); // Remove loading state
     }
@@ -84,16 +88,22 @@ const Login = () => {
         { merge: true }
       ); // Merge prevents overwriting if the document already exists
 
-      console.log(
-        "User logged in with Google:",
-        result.user.uid,
-        result.user.email,
-        result.user.email
-      );
+      // console.log(
+      //   "User logged in with Google:",
+      //   result.user.uid,
+      //   result.user.email,
+      //   result.user.email);
       dispatch(setRememberMe(rememberMe));
       navigate("/DashBoard");
     } catch (error) {
-      console.error("Error with Google login:", error.message);
+      if (error.code === "auth/email-already-in-use") {
+        // Specific check for email already in use error
+        toast.error("Email is already in use! Please try another email.");
+      } else {
+        // Handle other errors generically
+        toast.error(`Error: ${error.message}`);
+      }
+      //  console.error("Error with Google login:", error.message);
       setError("Google login failed. Please try again.");
     } finally {
       setLoading(false); // Remove loading state
@@ -150,14 +160,14 @@ const Login = () => {
           </div>
 
           <div className="options">
-            <label>
+            {/* <label>
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMeState(e.target.checked)}
               />{" "}
               Remember me
-            </label>
+            </label> */}
           </div>
 
           <button className="auth-btn" disabled={loading}>
@@ -165,8 +175,14 @@ const Login = () => {
           </button>
         </form>
 
-        <div style={{}}>
-          <p>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <p style={{ display: "flex", alignItems: "center", gap: "5px" }}>
             Or Sign in with{" "}
             <button
               style={{
@@ -175,9 +191,8 @@ const Login = () => {
                 padding: "0",
               }}
               onClick={handleGoogleLogin}
-              className="google"
             >
-              <box-icon type="logo" name="google"></box-icon>
+              <box-icon type="logo" name="google" color="#fff"></box-icon>
             </button>
           </p>
         </div>

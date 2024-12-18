@@ -10,10 +10,8 @@ const Home = () => {
     <div
       style={{
         fontFamily: "Arial, sans-serif",
-        backgroundColor: "#007bff",
         color: "#fff",
-        padding: "20px",
-        minHeight: "100vh",
+        maxHeight: "80vh",
         position: "relative",
         background: "linear-gradient(to top ,#4dc9e6, #210cae)",
       }}
@@ -27,7 +25,7 @@ const Home = () => {
         />
       </div>
       <div className="main-content">
-        <div className="text-container">
+        <div className="text-container" style={{ marginLeft: "2rem" }}>
           <h1>
             Have your best chat
             <Typewriter style={{ fontsize: "3.5rem", fontweight: "600" }} />
@@ -69,6 +67,7 @@ const Home = () => {
             flexDirection: "column",
             gap: "40px",
             alignItems: "end",
+            marginTop: "2rem",
           }}
         >
           <div style={{ position: "relative" }} className="image1">
@@ -89,7 +88,7 @@ const Home = () => {
                 bottom: "100px",
                 left: "150px",
                 backgroundColor: "#ffa500",
-                padding: "5px",
+                // padding: "5px",
                 borderRadius: "10px",
               }}
             >
@@ -100,7 +99,12 @@ const Home = () => {
             <img
               src="https://www.qrcaviews.org/wp-content/uploads/2020/03/phone-girl-FI-spring20.jpg"
               alt="User 2"
-              style={{ width: "200px", height: "200px", borderRadius: "10px" }}
+              style={{
+                width: "200px",
+                height: "200px",
+                borderRadius: "10px",
+                marginRight: "2rem",
+              }}
             />
             <div
               style={{

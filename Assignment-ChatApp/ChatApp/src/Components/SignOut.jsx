@@ -5,6 +5,7 @@ import { persistor } from "./../store/store";
 import { useNavigate } from "react-router-dom";
 import { app } from "../firebaseConfig";
 import "./Logout.css";
+import { TbLogout } from "react-icons/tb";
 
 const SignOut = () => {
   const dispatch = useDispatch();
@@ -37,7 +38,7 @@ const SignOut = () => {
 
   return (
     <div className="log-out" onClick={handleSignOut}>
-      Log Out
+      <TbLogout />
     </div>
   );
 };

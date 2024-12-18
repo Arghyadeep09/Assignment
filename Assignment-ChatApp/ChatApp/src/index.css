@@ -1,6 +1,51 @@
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+:root {
+  background-image: linear-gradient(#4dc9e6, #210cae);
+}
+/* Hide scrollbar by default */
+/* General styles for the scrollable container */
+/* General styles for the scrollable container */
+.scrollable {
+  height: 300px; /* Set a fixed height or any height */
+  overflow: hidden; /* Hide the scrollbar by default */
+  position: relative;
+}
 
+/* Webkit browsers (Chrome, Safari, Edge) */
+.scrollable::-webkit-scrollbar {
+  width: 8px; /* Scrollbar width */
+  opacity: 0; /* Initially hide the scrollbar */
+  transition: opacity 0.3s ease; /* Smooth fade-in/fade-out */
+}
+
+/* Show the scrollbar when hovering over the scrollable container */
+.scrollable:hover::-webkit-scrollbar {
+  opacity: 1; /* Make scrollbar visible */
+}
+
+/* Style the scrollbar track */
+.scrollable::-webkit-scrollbar-track {
+  background: transparent; /* Track background */
+}
+
+/* Style the scrollbar thumb */
+.scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2); /* Thumb color */
+  border-radius: 10px; /* Rounded corners */
+}
+
+/* Firefox */
+.scrollable {
+  scrollbar-width: thin; /* Thin scrollbar */
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent; /* Thumb and track color */
+}
+
+/* Show scrollbar when the user is actively scrolling */
+.scrollable:active,
+.scrollable:focus {
+  overflow: auto; /* Allow scrolling to make the scrollbar visible */
+}
