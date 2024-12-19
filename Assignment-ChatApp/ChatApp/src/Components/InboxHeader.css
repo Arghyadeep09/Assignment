@@ -98,10 +98,27 @@
   border-radius: 50%;
   margin-left: auto;
 }
+.profile-container {
+  position: relative; /* To position the online indicator above the profile picture */
+  display: inline-block; /* Keep the profile picture in a line with the indicator */
+}
+.online-indicator {
+  width: 12px;
+  height: 12px;
+  background-color: #4dc9e6; /* Active status color */
+  border-radius: 50%;
+  position: absolute;
+  top: 20px; /* Position it slightly above the profile image */
+  right: 0; /* Position it on the right of the profile picture */
+  visibility: visible; /* Initially hidden */
+}
 
+.online-indicator.active {
+  visibility: visible; /* Show when the user is active */
+}
 .recent-chats {
   overflow-y: auto;
-  height: 35%;
+  height: 30%;
   margin-top: 20px;
 }
 

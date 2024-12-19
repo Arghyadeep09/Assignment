@@ -14,25 +14,25 @@ const SignOut = () => {
   const user = useSelector((state) => state.auth.user); // Retrieve the user from Redux state
 
   const handleSignOut = async () => {
-    console.log("Current user in Redux:", user);
+    // console.log("Current user in Redux:", user);
     if (!user) {
-      console.error("No user is currently logged in.");
+      //  console.error("No user is currently logged in.");
       return;
     }
 
     try {
       // Firebase Auth sign out
       await signOut(auth);
-      console.log("User logged out successfully");
+      //  console.log("User logged out successfully");
 
       // Clear Redux state and persist storage
       dispatch(clearUser());
       // await persistor.purge();
       localStorage.clear();
-      console.log("Redux state cleared. Redirecting to home...");
+      //  console.log("Redux state cleared. Redirecting to home...");
       navigate("/"); // Redirect to Home
     } catch (error) {
-      console.error("Error signing out:", error);
+      // console.error("Error signing out:", error);
     }
   };
 

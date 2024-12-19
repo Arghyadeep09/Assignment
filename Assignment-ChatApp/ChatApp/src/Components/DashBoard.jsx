@@ -31,6 +31,7 @@ import SignOut from "./SignOut";
 import ColorPicker from "./ColorPicker";
 import { MdArrowBackIosNew } from "react-icons/md";
 import { MdDeleteOutline, MdClose } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const DashBoard = () => {
   const db = getFirestore(app);
@@ -68,7 +69,7 @@ const DashBoard = () => {
         [`typing.${user.uid}`]: isTyping,
       });
     } catch (error) {
-      console.error("Error updating typing status:", error);
+      //  console.error("Error updating typing status:", error);
     }
   };
 
@@ -100,7 +101,6 @@ const DashBoard = () => {
         const typingUsers = Object.entries(data.typing)
           .filter(([uid, isTyping]) => isTyping && uid !== user.uid)
           .map(([uid]) => uid);
-
         setTypingUsers(typingUsers); // Assume this is a state to store typing users
       }
     });
@@ -214,30 +214,45 @@ const DashBoard = () => {
   // Fetch team members from Firestore
 
   useEffect(() => {
+    let unsubscribe; // For cleanup
+
     const fetchTeamMembers = async () => {
       try {
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const fetchedUsers = usersSnapshot.docs
-          .map((doc) => ({
-            uid: doc.id,
-            name: doc.data().name,
-            email: doc.data().email,
-            avatar: doc.data().avatar || "https://placehold.co/40x40",
-          }))
-          .filter((member) => member.uid !== user.uid); // Exclude the current user
-        // console.log(fetchedUsers);
+        // Attach a snapshot listener to the "users" collection
+        unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+          const fetchedUsers = snapshot.docs
+            .map((doc) => ({
+              uid: doc.id,
+              name: doc.data().name,
+              email: doc.data().email,
+              avatar: doc.data().avatar || "https://placehold.co/40x40",
+              status: doc.data().status || "inactive", // Include user status
+            }))
+            .filter((member) => member.uid !== user.uid); // Exclude the current user
 
-        dispatch(setTeamMembers(fetchedUsers));
-        setLoading(false);
+          // Dispatch the updated team members list to Redux store
+          dispatch(setTeamMembers(fetchedUsers));
+          setLoading(false);
+        });
       } catch (error) {
-        // console.log(error);
+        // Handle error
         setError(error.message);
         setLoading(false);
       }
     };
 
-    if (user) fetchTeamMembers();
+    if (user) {
+      fetchTeamMembers();
+    }
+
+    // Cleanup the snapshot listener when the component unmounts
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [user, db, dispatch]);
+
   // Fetch chat rooms from Firestore and store them in Redux
 
   // clean up the
@@ -324,13 +339,13 @@ const DashBoard = () => {
     selectedChatRoom?.color,
   ]);
 
-  console.log(useSelector((state) => state.auth.user));
+  //console.log(useSelector((state) => state.auth.user));
   const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
   const sortedTeamMembers = [...teamMembers].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
 
-  console.log(sortedTeamMembers);
+  //console.log(sortedTeamMembers);
   const filteredAndSortedTeamMembers = searchQuery.trim()
     ? teamMembers
         .filter(
@@ -448,33 +463,38 @@ const DashBoard = () => {
 
   // store all members who is currently having a chat room with the user
   useEffect(() => {
-    const fetchRecentChats = async () => {
+    let unsubscribe;
+
+    const fetchRecentChats = () => {
       try {
-        const chatPromises = teamMembers.map(async (member) => {
+        const chatListeners = teamMembers.map((member) => {
           const participantIds = [user.uid, member.uid].sort().join("-");
 
-          // Query to find if there is a chat room for the current user and the team member
+          // Query to listen for changes in chatrooms for the current user and team member
           const chatRoomQuery = query(
             collection(db, "chatrooms"),
             where("participantIds", "==", participantIds)
           );
-          const querySnapshot = await getDocs(chatRoomQuery);
 
-          if (!querySnapshot.empty) {
-            // If chat room exists, add the member to recentChats state
-            setRecentChats((prevChats) => {
-              if (!prevChats.some((chat) => chat.uid === member.uid)) {
-                return [...prevChats, member];
-              }
-              return prevChats;
-            });
-          }
+          // Attach a snapshot listener to the query
+          return onSnapshot(chatRoomQuery, (querySnapshot) => {
+            if (!querySnapshot.empty) {
+              setRecentChats((prevChats) => {
+                if (!prevChats.some((chat) => chat.uid === member.uid)) {
+                  return [...prevChats, member];
+                }
+                return prevChats;
+              });
+            }
+          });
         });
 
-        // Wait for all promises to complete
-        await Promise.all(chatPromises);
+        // Combine all listeners for cleanup
+        unsubscribe = () => {
+          chatListeners.forEach((unsub) => unsub());
+        };
       } catch (error) {
-        // console.error("Error fetching recent chats:", error);
+        // Handle errors
         setError(error.message);
       }
     };
@@ -482,6 +502,13 @@ const DashBoard = () => {
     if (teamMembers.length > 0) {
       fetchRecentChats();
     }
+
+    // Cleanup all listeners when component unmounts or dependencies change
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [teamMembers, user, db]);
 
   // Fetch chat messages for the selected chat room
@@ -597,7 +624,12 @@ const DashBoard = () => {
                     selectedMember?.uid === member.uid ? "#f1f5f9" : "#f9f9f9",
                 }}
               >
-                <img src={member.avatar} alt={member.name} className="avatar" />
+                <img
+                  src={member.avatar}
+                  alt={member.name}
+                  className="avatar"
+                  style={member.active ? { border: "1px solid #4dc9e6" } : {}}
+                />
                 <div>
                   <p>{member.name}</p>
                 </div>
@@ -622,7 +654,13 @@ const DashBoard = () => {
                     selectedMember?.uid === member.uid ? "#f1f5f9" : "#f9f9f9",
                 }}
               >
-                <img src={member.avatar} alt={member.name} className="avatar" />
+                <img
+                  src={member.avatar}
+                  alt={member.name}
+                  className="avatar"
+                  style={member.active ? { border: "1px solid #4dc9e6" } : {}}
+                />
+
                 <div className="recent-chat-info">
                   <p>{member.name}</p>
                 </div>
@@ -658,6 +696,7 @@ const DashBoard = () => {
                   <div className="notification-icon"></div>
                   <div className="profile">
                     <img
+                      style={user.active ? { border: "1px solid #4dc9e6" } : {}}
                       src="http://placehold.co/40x40"
                       alt="profile of user"
                       className="profile-picture"
@@ -774,57 +813,9 @@ const DashBoard = () => {
                           <option value="Courier New">Courier New</option>
                         </select>
                       )}
-                      {/* <select
-                    id="font-dropdown"
-                    className="font-dropdown"
-                    value={selectedFont}
-                    onChange={handleFontChange}
-                  >
-                    <option value="Arial">Arial</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Poppins">Poppins</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Courier New">Courier New</option>
-                  </select> */}
                     </div>
                   </div>
-                  {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
-                <label htmlFor="colorPicker">
-                  <box-icon
-                    type="solid"
-                    name="color"
-                    color={selectedChatRoom?.color || "#fff"} // Correct JSX syntax
-                  ></box-icon>
-                </label>
-                <input
-                  type="color"
-                  id="colorPicker"
-                  value={selectedChatRoom?.color || "#fff"}
-                  onChange={async (e) => {
-                    const newColor = e.target.value;
 
-                    try {
-                      // Update Firestore
-                      const chatRoomRef = doc(
-                        db,
-                        "chatrooms",
-                        selectedChatRoom.id
-                      );
-                      await updateDoc(chatRoomRef, {
-                        color: newColor,
-                      });
-
-                      // Update local state to reflect color change immediately
-                      setSelectedChatRoom((prev) => ({
-                        ...prev,
-                        color: newColor,
-                      }));
-                    } catch (error) {
-                      // console.error("Error updating chatroom color:", error);
-                    }
-                  }}
-                />
-              </div> */}
                   <ColorPicker
                     db={db}
                     selectedChatRoom={selectedChatRoom}

@@ -43,13 +43,34 @@ const Login = () => {
         email,
         password
       );
-      dispatch(
-        setUser({
-          uid: userCredential.user.uid,
-          email: userCredential.user.email,
-          name: userCredential.user.displayName || "user",
-        })
-      );
+      const user = userCredential.user;
+
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      // Check if the user document exists
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        // Check the status field and update if necessary
+        if (!userData.status || userData.status === "inactive") {
+          // If no status or if the status is inactive, set it to active
+          await setDoc(
+            userRef,
+            { status: "active" },
+            { merge: true } // Use merge to avoid overwriting other fields
+          );
+        }
+
+        // Dispatch user data to Redux store
+        dispatch(
+          setUser({
+            uid: user.uid,
+            email: user.email,
+            name: user.displayName || "user",
+            status: "active", // Make sure the user status in the store is "active"
+          })
+        );
+      }
       dispatch(setRememberMe(rememberMe));
       // updatePersistConfig(rememberMe);
       navigate("/DashBoard");
@@ -67,11 +88,13 @@ const Login = () => {
       setError(""); // Clear previous errors
       setLoading(true); // Show loading state
       const result = await signInWithPopup(auth, googleProvider);
+
       dispatch(
         setUser({
           uid: result.user.uid,
           email: result.user.email,
           name: result.user.displayName || "user",
+          status: "active",
         })
       );
       const user = result.user;
@@ -84,6 +107,7 @@ const Login = () => {
           name: user.displayName || "Anonymous",
           photoURL: user.photoURL || "",
           createdAt: new Date().toISOString(),
+          status: "active",
         },
         { merge: true }
       ); // Merge prevents overwriting if the document already exists
