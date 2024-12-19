@@ -636,39 +636,41 @@ const DashBoard = () => {
 
       {/* Main Chat Section */}
       <div className="main-chat">
-        <div className="chat-header">
-          <div className="header-container">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-              }}
-            >
-              <div className="menu-icon">
-                <box-icon
-                  name="menu"
-                  onClick={() => setSidebarActive(!sidebarActive)}
-                ></box-icon>
+        {selectedMember == null && (
+          <div className="chat-header">
+            <div className="header-container">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <div className="menu-icon">
+                  <box-icon
+                    name="menu"
+                    onClick={() => setSidebarActive(!sidebarActive)}
+                  ></box-icon>
+                </div>
+                <h2>Messages</h2>
               </div>
-              <h2>Messages</h2>
-            </div>
-            <div className="chat-header-right">
-              <div className="header-right">
-                <div className="notification-icon"></div>
-                <div className="profile">
-                  <img
-                    src="http://placehold.co/40x40"
-                    alt="profile of user"
-                    className="profile-picture"
-                  />
-                  <span className=" profile-name">{user.name}</span>
-                  <SignOut />
+              <div className="chat-header-right">
+                <div className="header-right">
+                  <div className="notification-icon"></div>
+                  <div className="profile">
+                    <img
+                      src="http://placehold.co/40x40"
+                      alt="profile of user"
+                      className="profile-picture"
+                    />
+                    <span className=" profile-name">{user.name}</span>
+                    <SignOut />
+                  </div>
                 </div>
               </div>
             </div>
+            {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
           </div>
-          {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
-        </div>
+        )}
         {selectedMember == null && (
           <div
             style={{
@@ -695,81 +697,84 @@ const DashBoard = () => {
 
         {selectedMember !== null && (
           <div className="chat-header">
-            <div className="profile">
-              <span
-                style={{ marginRight: "10px" }}
-                onClick={() => setSelectedMember(null)}
-              >
-                <MdArrowBackIosNew />
-              </span>
-              <img
-                src="http://placehold.co/40x40"
-                alt="Profile"
-                className="profile-picture"
-              />
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <span className="profile-name">{selectedMember.name}</span>
-                <i className="fas fa-chevron-down profile-icon"></i>
-                {typingUsers.includes(selectedMember.uid) && (
-                  <span
-                    style={{
-                      paddingTop: "5px",
-                      paddingLeft: "10px",
-                      fontSize: "14px",
-                      color: "gray",
-                    }}
-                  >
-                    typing...
-                  </span>
-                )}
-              </div>
-            </div>
-            {isOpen ? (
-              <IoIosOptions
-                size={24}
-                style={{ cursor: "pointer" }}
-                onClick={handleToggle}
-              />
-            ) : (
-              <div
-                className="features"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div style={{ fontFamily: selectedFont }}>
-                  <div
-                    className="font-selector"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      paddingRight: "10px",
-                    }}
-                  >
-                    <label
-                      htmlFor="font-dropdown"
-                      onClick={handleIconClick}
-                      style={{ display: "flex", alignItems: "center" }}
+            <div className="header-container">
+              <div className="profile">
+                <span
+                  style={{ marginRight: "10px" }}
+                  onClick={() => setSelectedMember(null)}
+                >
+                  <MdArrowBackIosNew />
+                </span>
+                <img
+                  src="http://placehold.co/40x40"
+                  alt="Profile"
+                  className="profile-picture"
+                />
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span className="profile-name">{selectedMember.name}</span>
+                  <i className="fas fa-chevron-down profile-icon"></i>
+                  {typingUsers.includes(selectedMember.uid) && (
+                    <span
+                      style={{
+                        paddingTop: "5px",
+                        paddingLeft: "10px",
+                        fontSize: "14px",
+                        color: "gray",
+                      }}
                     >
-                      <BsFileFont />
-                    </label>
-                    {isDropdownVisible && (
-                      <select
-                        id="font-dropdown"
-                        className="font-dropdown"
-                        value={selectedFont}
-                        onChange={handleFontChange}
+                      typing...
+                    </span>
+                  )}
+                </div>
+              </div>
+              {isOpen ? (
+                <IoIosOptions
+                  size={24}
+                  style={{ cursor: "pointer" }}
+                  onClick={handleToggle}
+                />
+              ) : (
+                <div
+                  className="features"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ fontFamily: selectedFont }}>
+                    <div
+                      className="font-selector"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        paddingRight: "10px",
+                      }}
+                    >
+                      <label
+                        htmlFor="font-dropdown"
+                        onClick={handleIconClick}
+                        style={{ display: "flex", alignItems: "center" }}
                       >
-                        <option value="Arial">Arial</option>
-                        <option value="Roboto">Roboto</option>
-                        <option value="Poppins">Poppins</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                      </select>
-                    )}
-                    {/* <select
+                        <BsFileFont />
+                      </label>
+                      {isDropdownVisible && (
+                        <select
+                          id="font-dropdown"
+                          className="font-dropdown"
+                          value={selectedFont}
+                          onChange={handleFontChange}
+                        >
+                          <option value="Arial">Arial</option>
+                          <option value="Roboto">Roboto</option>
+                          <option value="Poppins">Poppins</option>
+                          <option value="Times New Roman">
+                            Times New Roman
+                          </option>
+                          <option value="Courier New">Courier New</option>
+                        </select>
+                      )}
+                      {/* <select
                     id="font-dropdown"
                     className="font-dropdown"
                     value={selectedFont}
@@ -781,9 +786,9 @@ const DashBoard = () => {
                     <option value="Times New Roman">Times New Roman</option>
                     <option value="Courier New">Courier New</option>
                   </select> */}
+                    </div>
                   </div>
-                </div>
-                {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
+                  {/* <div className="color-picker" style={{ marginLeft: "5px" }}>
                 <label htmlFor="colorPicker">
                   <box-icon
                     type="solid"
@@ -820,25 +825,26 @@ const DashBoard = () => {
                   }}
                 />
               </div> */}
-                <ColorPicker
-                  db={db}
-                  selectedChatRoom={selectedChatRoom}
-                  setSelectedChatRoom={setSelectedChatRoom}
-                  setTimeStampColor={setTimeStampColor}
-                />
-                <div
-                  onClick={handleDeleteChat}
-                  style={{ width: "40px", padding: "15px" }}
-                >
-                  <MdDeleteOutline size={20} />
+                  <ColorPicker
+                    db={db}
+                    selectedChatRoom={selectedChatRoom}
+                    setSelectedChatRoom={setSelectedChatRoom}
+                    setTimeStampColor={setTimeStampColor}
+                  />
+                  <div
+                    onClick={handleDeleteChat}
+                    style={{ width: "40px", padding: "15px" }}
+                  >
+                    <MdDeleteOutline size={20} />
+                  </div>
+                  <MdClose
+                    size={24}
+                    style={{ cursor: "pointer" }}
+                    onClick={handleToggle}
+                  />
                 </div>
-                <MdClose
-                  size={24}
-                  style={{ cursor: "pointer" }}
-                  onClick={handleToggle}
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
         {/* Chat Messages */}
