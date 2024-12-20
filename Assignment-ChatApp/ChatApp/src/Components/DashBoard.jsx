@@ -36,9 +36,10 @@ import { toast } from "react-toastify";
 const DashBoard = () => {
   const db = getFirestore(app);
   const user = useSelector((state) => state.auth.user);
+  const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  //sconst [teamMembers, setTeamMembers] = useState([]);
+
   const [recentChats, setRecentChats] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const [selectedChatRoom, setSelectedChatRoom] = useState(null);
@@ -56,10 +57,11 @@ const DashBoard = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isOpen, setIsOpen] = useState(true);
+
+  //set user active on refresh event
   useEffect(() => {
     const setUserActive = async () => {
       if (!user) return;
-
       try {
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, { status: "active" }, { merge: true });
@@ -68,67 +70,63 @@ const DashBoard = () => {
         toast.error(error);
       }
     };
-
     // Set user to active on component mount
     setUserActive();
-
     // Optional cleanup logic for component unmount
     return () => {
       // Handle unmount behavior here if needed
     };
   }, [user, db]);
+  //set user inactive in tab close
   const setUserInactive = async () => {
     if (!user) return;
 
     try {
       const userRef = doc(db, "users", user.uid);
       await setDoc(userRef, { status: "inactive" }, { merge: true });
-      console.log("User status set to inactive on tab close.");
+      //   console.log("User status set to inactive on tab close.");
     } catch (error) {
-      console.error("Error setting user status to inactive:", error);
+      toast.error(error);
+      //  console.error("Error setting user status to inactive:", error);
     }
   };
-
+  // Handle tab close or navigation away from the page
   useEffect(() => {
-    // Handle tab close or navigation away from the page
-    const handleBeforeUnload = (event) => {
+    const handleBeforeUnload = () => {
       setUserInactive(); // Mark user as inactive in Firestore
     };
-
     // Attach the event listener
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     // Cleanup the event listener on component unmount
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [user, db]);
+
   const handleToggle = () => {
     setIsOpen(!isOpen);
   };
+  //to update in database which user is typing  in the chat window
   const handleTyping = async (isTyping) => {
     if (!selectedChatRoom) return;
-
     try {
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
       await updateDoc(chatRoomRef, {
         [`typing.${user.uid}`]: isTyping,
       });
-    } catch (error) { 
+    } catch (error) {
       toast.error(error.message);
       //  console.error("Error updating typing status:", error);
     }
   };
-
-  const handleInputChange = (e) => {
+  // to make sure typing status is updated properly
+  const handleInputChange = () => {
     //   setMessage(e.target.value); // Assume `setMessage` updates the input value state
-
     // Notify Firestore that the user is typing
     if (!isTyping) {
       setIsTyping(true);
       handleTyping(true);
     }
-
     // Stop typing after 3 seconds of inactivity
     if (typingTimeout) clearTimeout(typingTimeout);
     const timeout = setTimeout(() => {
@@ -137,11 +135,10 @@ const DashBoard = () => {
     }, 3000);
     setTypingTimeout(timeout);
   };
+  // Handle typing timeout event when typing is disabled
   useEffect(() => {
     if (!selectedChatRoom) return;
-
     const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
-
     const unsubscribe = onSnapshot(chatRoomRef, (snapshot) => {
       const data = snapshot.data();
       if (data?.typing) {
@@ -154,22 +151,19 @@ const DashBoard = () => {
 
     return () => unsubscribe();
   }, [selectedChatRoom, user, db]);
-
+  // Function to fetch delete chats from Firestore
   const handleDeleteChat = async () => {
     if (selectedChatRoom) {
       try {
         const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
-
         // Delete all messages in the chat room
         const messagesRef = collection(chatRoomRef, "messages");
         const messagesSnapshot = await getDocs(messagesRef);
         messagesSnapshot.forEach(async (messageDoc) => {
           await deleteDoc(doc(messagesRef, messageDoc.id)); // Delete each message
         });
-
         // Finally, delete the chat room itself
         await deleteDoc(chatRoomRef);
-
         // Update state to remove the deleted chat room
         setRecentChats((prevChats) =>
           prevChats.filter((chat) => chat.uid !== selectedChatRoom.uid)
@@ -182,10 +176,11 @@ const DashBoard = () => {
       }
     }
   };
+  // function to handle the toggle of the options menu
   const handleIconClick = () => {
     setDropdownVisible((prev) => !prev);
   };
-
+  // Function to handle the toggle of the font list and also the font change
   const handleFontChange = async (e) => {
     const newFont = e.target.value;
     setDropdownVisible(false);
@@ -198,12 +193,12 @@ const DashBoard = () => {
         font: newFont,
       }));
     } catch (error) {
-      // console.error("Error updating chatroom font:", error); 
+      // console.error("Error updating chatroom font:", error);
       toast.error(error.message);
       alert("Failed to update font. Please try again.");
     }
   };
-
+  // to navigate to home page when user is not logged in
   useEffect(() => {
     // Ensure user is authenticated
     if (!user) {
@@ -244,6 +239,7 @@ const DashBoard = () => {
     };
   }, [navigate, user]);
 
+  // Function to handle font change from the database to the app using state
   useEffect(() => {
     if (selectedChatRoom?.id) {
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
@@ -254,18 +250,15 @@ const DashBoard = () => {
           setSelectedFont(chatRoomData.font || "Arial"); // Default to Arial if no font is set
         }
       });
-
       return () => unsubscribe();
     }
   }, [selectedChatRoom?.id, db]);
 
   // eslint-disable-next-line no-unused-vars
   const auth = getAuth();
-  // Fetch team members from Firestore
-
+  // Fetch team members from Firestore and store them in redux storage
   useEffect(() => {
     let unsubscribe; // For cleanup
-
     const fetchTeamMembers = async () => {
       try {
         // Attach a snapshot listener to the "users" collection
@@ -306,6 +299,7 @@ const DashBoard = () => {
   // Fetch chat rooms from Firestore and store them in Redux
 
   // clean up the
+  //how is this function diff from line244
   useEffect(() => {
     if (selectedChatRoom?.id) {
       // Reference to the chat room document in Firestore
@@ -327,6 +321,7 @@ const DashBoard = () => {
     }
   }, [selectedChatRoom?.id, db]);
 
+  // Function to  get message from firestore server chat room
   useEffect(() => {
     let unsubscribe = null;
 
@@ -353,12 +348,11 @@ const DashBoard = () => {
       }
     };
   }, [selectedChatRoom, db]);
-
+  //Function to change chat room colors
   useEffect(() => {
     if (selectedChatRoom?.id) {
       // Listen for changes to the selected chat room
       const chatRoomRef = doc(db, "chatrooms", selectedChatRoom.id);
-
       const unsubscribe = onSnapshot(chatRoomRef, (docSnapshot) => {
         if (docSnapshot.exists()) {
           const chatRoomData = docSnapshot.data();
@@ -388,13 +382,12 @@ const DashBoard = () => {
     selectedChatRoom?.textColor,
     selectedChatRoom?.color,
   ]);
-
   //console.log(useSelector((state) => state.auth.user));
-  const teamMembers = useSelector((state) => state.teamMembers.teamMembers);
+
+  // to keep the team members sorted in the team members LIST  and on search arrange a/c
   const sortedTeamMembers = [...teamMembers].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
-
   //console.log(sortedTeamMembers);
   const filteredAndSortedTeamMembers = searchQuery.trim()
     ? teamMembers
@@ -424,7 +417,9 @@ const DashBoard = () => {
 
           return emailAIndex - emailBIndex;
         })
-    : sortedTeamMembers; // Show all team members when search is empty
+    : sortedTeamMembers;
+  // Show all team members when search is empty
+
   // open chat room on clicking
   const handleMemberClick = async (member) => {
     try {
@@ -507,11 +502,10 @@ const DashBoard = () => {
         setChatMessages([]); // No messages in a new chat room
       }
     } catch (error) {
-      // console.error("Error fetching or creating chat room:", error); 
+      // console.error("Error fetching or creating chat room:", error);
       toast(error);
     }
   };
-
   // store all members who is currently having a chat room with the user
   useEffect(() => {
     let unsubscribe;
@@ -561,9 +555,7 @@ const DashBoard = () => {
       }
     };
   }, [teamMembers, user, db]);
-
   // Fetch chat messages for the selected chat room
-
   //send message to the server and return results
   const sendMessage = async () => {
     if (newMessage.trim() === "") {
@@ -598,24 +590,27 @@ const DashBoard = () => {
       // Clear the input field after sending
       setNewMessage("");
     } catch (error) {
-      // console.error("Error sending message:", error); 
+      // console.error("Error sending message:", error);
       toast(error);
-      
     }
   };
+  // to add emoji with the message and close the emojicon
   const handleEmojiClick = (emojiObject) => {
     setNewMessage((prev) => prev + emojiObject.emoji);
     setShowEmojiPicker(false);
   };
   // console.log(selectedMember);
+  // to return to home page when user not logged in
   useEffect(() => {
     if (!user) {
       // Navigate to home after sign-out
       navigate("/");
     }
   }, [user, navigate]); // Depend on user and navigate
+
   if (loading) {
-    return (
+    return ( 
+      // loading page
       <div
         style={{
           height: "400vh",
@@ -634,8 +629,11 @@ const DashBoard = () => {
       </div>
     );
   }
+  // if error is encountered
+  if (error) 
+    return <div style={{ width: "100vw", height: "100vh" }}>error</div>; 
 
-  if (error) return <div>error</div>;
+  //dashboard
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
@@ -645,9 +643,9 @@ const DashBoard = () => {
             name="x"
             onClick={() => setSidebarActive(!sidebarActive)}
           ></box-icon>
-        )}
-        <div></div>
+        )} 
         <h2 className="app-title">Chatter</h2>
+        {/* search box */}
         <div className="search-box">
           <input
             type="text"
@@ -657,8 +655,6 @@ const DashBoard = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-
-        {/* Team Members */}
         {/* Team Members */}
         <h3 style={{ marginBottom: "10px" }}>Team Members</h3>
         <div className="team-members   scrollable">
@@ -696,7 +692,6 @@ const DashBoard = () => {
             <p>No team members found</p>
           )}
         </div>
-
         {/* Recent Chats */}
         <h3>Recent Chats</h3>
         <div className="recent-chats scrollable">
@@ -732,107 +727,72 @@ const DashBoard = () => {
           )}
         </div>
       </div>
-
       {/* Main Chat Section */}
       <div className="main-chat">
-        {selectedMember == null && (
-          <div className="chat-header">
-            <div className="header-container">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <div className="menu-icon">
-                  <box-icon
-                    name="menu"
-                    onClick={() => setSidebarActive(!sidebarActive)}
-                  ></box-icon>
-                </div>
-                <h2>Messages</h2>
+        <div className="chat-header">
+          <div className="header-container">
+            <div style={{ display: "flex", alignItems: "center" }}>
+              {/* Menu Icon */}
+              <div className="menu-icon">
+                <box-icon
+                  name="menu"
+                  onClick={() => setSidebarActive(!sidebarActive)}
+                ></box-icon>
               </div>
-              <div className="chat-header-right">
-                <div className="header-right">
-                  <div className="notification-icon"></div>
-                  {user ? (
-                    <div className="profile">
-                      <img
-                        // style={user.active ? { border: "2px solid #4dc9e6" } : {}}
-                        src="http://placehold.co/40x40"
-                        alt="profile of user"
-                        className="profile-picture"
-                      />
-                      <span className=" profile-name">{user.name}</span>
-                      <SignOut />
-                    </div>
-                  ) : (
-                    loading
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
-          </div>
-        )}
-        {selectedMember == null && (
-          <div
-            style={{
-              height: "90vh",
-              width: "100%",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgb(246, 242, 225)", // Optional background color
-            }}
-          >
-            <video
-              src={loadingImage}
-              autoPlay
-              loop
-              muted
-              alt="start chat "
-              width={600}
-              style={{ objectFit: "contain" }}
-            ></video>
-          </div>
-        )}
 
-        {selectedMember !== null && (
-          <div className="chat-header">
-            <div className="header-container">
-              <div className="profile">
-                <span
-                  className="back"
-                  style={{ marginRight: "10px" }}
-                  onClick={() => setSelectedMember(null)}
-                >
-                  <MdArrowBackIosNew />
-                </span>
-                <img
-                  src="http://placehold.co/40x40"
-                  alt="Profile"
-                  className="profile-picture"
-                />
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="profile-name">{selectedMember.name}</span>
-                  <i className="fas fa-chevron-down profile-icon"></i>
-                  {typingUsers.includes(selectedMember.uid) && (
-                    <span
-                      style={{
-                        paddingTop: "5px",
-                        paddingLeft: "10px",
-                        fontSize: "14px",
-                        color: "gray",
-                      }}
-                    >
-                      typing...
-                    </span>
-                  )}
+              {/* Header or Selected Member Profile */}
+              {selectedMember == null ? (
+                <h2>Messages</h2>
+              ) : (
+                <div className="profile">
+                  <span
+                    className="back"
+                    style={{ marginRight: "10px" }}
+                    onClick={() => setSelectedMember(null)}
+                  >
+                    <MdArrowBackIosNew />
+                  </span>
+                  <img
+                    src="http://placehold.co/40x40"
+                    alt="Profile"
+                    className="profile-picture"
+                  />
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span className="profile-name">{selectedMember.name}</span>
+                    {/* to show typing or not  */}
+                    {typingUsers.includes(selectedMember.uid) && (
+                      <span
+                        style={{
+                          paddingTop: "5px",
+                          paddingLeft: "10px",
+                          fontSize: "14px",
+                          color: "gray",
+                        }}
+                      >
+                        typing...
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {isOpen ? (
+              )}
+            </div>
+            {/* Chat Header Right Section */}
+            <div className="chat-header-right">
+              {selectedMember == null ? (
+                user ? (
+                  <div className="profile">
+                    <img
+                      src="http://placehold.co/40x40"
+                      alt="profile of user"
+                      className="profile-picture"
+                    />
+                    <span className="profile-name">{user.name}</span>
+                    <SignOut />
+                  </div>
+                ) : (
+                  loading
+                )
+              ) : isOpen ? (
                 <span className="option-container">
                   <IoIosOptions
                     size={24}
@@ -849,6 +809,7 @@ const DashBoard = () => {
                     justifyContent: "space-between",
                   }}
                 >
+                  {/* Font Selector */}
                   <div style={{ fontFamily: selectedFont }}>
                     <div
                       className="font-selector"
@@ -886,12 +847,15 @@ const DashBoard = () => {
                     </div>
                   </div>
 
+                  {/* Color Picker */}
                   <ColorPicker
                     db={db}
                     selectedChatRoom={selectedChatRoom}
                     setSelectedChatRoom={setSelectedChatRoom}
                     setTimeStampColor={setTimeStampColor}
                   />
+
+                  {/* Delete Chat Icon */}
                   <div
                     onClick={handleDeleteChat}
                     style={{ width: "40px", padding: "15px" }}
@@ -900,6 +864,8 @@ const DashBoard = () => {
                       <MdDeleteOutline size={20} />
                     </span>
                   </div>
+
+                  {/* Close Icon */}
                   <span className="option-container">
                     <MdClose
                       size={24}
@@ -911,9 +877,33 @@ const DashBoard = () => {
               )}
             </div>
           </div>
+          {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
+        </div> 
+        {/* to show home section or the chat window  */}
+        {selectedMember == null && (
+          <div
+            style={{
+              height: "90vh",
+              width: "100%",
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgb(246, 242, 225)", // Optional background color
+            }}
+          >
+            <video
+              src={loadingImage}
+              autoPlay
+              loop
+              muted
+              alt="start chat "
+              width={600}
+              style={{ objectFit: "contain" }}
+            ></video>
+          </div>
         )}
         {/* Chat Messages */}
-
         {selectedMember !== null && (
           <div
             className="chat-messages"
@@ -948,7 +938,7 @@ const DashBoard = () => {
             ))}
           </div>
         )}
-        {/* Message Input */}
+        {/* Message Input  area  */}
         {selectedMember !== null && (
           <div className="chat-input" style={{ position: "relative" }}>
             {/* Emoji Picker Toggle Button */}
@@ -963,7 +953,6 @@ const DashBoard = () => {
             >
               <box-icon name="happy" size="md"></box-icon>
             </button>
-
             {/* Emoji Picker Component */}
             {showEmojiPicker && (
               <div
@@ -980,7 +969,6 @@ const DashBoard = () => {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
-
             {/* Message Input Field */}
             <input
               type="text"
@@ -988,13 +976,12 @@ const DashBoard = () => {
               value={newMessage}
               onChange={(e) => {
                 setNewMessage(e.target.value); // Update the message state
-                handleInputChange(e); // Trigger typing status logic
+                handleInputChange(); // Trigger typing status logic
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") sendMessage(); // Send message on Enter key
               }}
             />
-
             {/* Send Button */}
             <button
               onClick={sendMessage}

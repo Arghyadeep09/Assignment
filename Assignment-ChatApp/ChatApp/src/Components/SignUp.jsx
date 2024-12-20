@@ -1,5 +1,4 @@
-/* eslint-disable react/display-name */
-/* eslint-disable react/prop-types */
+
 
 import "./../styles/Signup.css";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +32,8 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
-  const auth = getAuth(app);
+  const auth = getAuth(app); 
+
   const validateForm = () => {
     let isValid = true;
 

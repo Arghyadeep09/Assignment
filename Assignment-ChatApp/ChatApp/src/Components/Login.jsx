@@ -1,4 +1,4 @@
-/* eslint-disable react/display-name */
+
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
@@ -59,7 +59,8 @@ const Login = () => {
             { status: "active" },
             { merge: true } // Use merge to avoid overwriting other fields
           );
-        }
+        } 
+
 
         // Dispatch user data to Redux store
         dispatch(
