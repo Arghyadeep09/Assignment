@@ -13,7 +13,7 @@ const teamMembersSlice = createSlice({
     setTeamMembers: (state, action) => {
         
       state.teamMembers = action.payload;
-      console.log("Dispatched data:", action.payload);
+      //console.log("Dispatched data:", action.payload);
     },
   },
 });

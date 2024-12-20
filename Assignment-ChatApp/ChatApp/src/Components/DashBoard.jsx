@@ -56,7 +56,53 @@ const DashBoard = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isOpen, setIsOpen] = useState(true);
+  useEffect(() => {
+    const setUserActive = async () => {
+      if (!user) return;
 
+      try {
+        const userRef = doc(db, "users", user.uid);
+        await setDoc(userRef, { status: "active" }, { merge: true });
+        console.log("User status set to active.");
+      } catch (error) {
+        console.error("Error updating user status to active:", error);
+      }
+    };
+
+    // Set user to active on component mount
+    setUserActive();
+
+    // Optional cleanup logic for component unmount
+    return () => {
+      // Handle unmount behavior here if needed
+    };
+  }, [user, db]);
+  const setUserInactive = async () => {
+    if (!user) return;
+
+    try {
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, { status: "inactive" }, { merge: true });
+      console.log("User status set to inactive on tab close.");
+    } catch (error) {
+      console.error("Error setting user status to inactive:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Handle tab close or navigation away from the page
+    const handleBeforeUnload = (event) => {
+      setUserInactive(); // Mark user as inactive in Firestore
+    };
+
+    // Attach the event listener
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [user, db]);
   const handleToggle = () => {
     setIsOpen(!isOpen);
   };
@@ -106,7 +152,7 @@ const DashBoard = () => {
     });
 
     return () => unsubscribe();
-  }, [selectedChatRoom, user]);
+  }, [selectedChatRoom, user, db]);
 
   const handleDeleteChat = async () => {
     if (selectedChatRoom) {
@@ -173,7 +219,9 @@ const DashBoard = () => {
       event.preventDefault();
 
       // If somehow back is pressed, go to a specific route
+      setUserInactive();
       navigate("/");
+      sessionStorage.clear();
     };
 
     // Add event listeners
@@ -628,7 +676,11 @@ const DashBoard = () => {
                   src={member.avatar}
                   alt={member.name}
                   className="avatar"
-                  style={member.active ? { border: "1px solid #4dc9e6" } : {}}
+                  style={
+                    member.status === "active"
+                      ? { border: "2px solid #4dc9e6" }
+                      : {}
+                  }
                 />
                 <div>
                   <p>{member.name}</p>
@@ -658,7 +710,11 @@ const DashBoard = () => {
                   src={member.avatar}
                   alt={member.name}
                   className="avatar"
-                  style={member.active ? { border: "1px solid #4dc9e6" } : {}}
+                  style={
+                    member.status === "active"
+                      ? { border: "2px solid #4dc9e6" }
+                      : {}
+                  }
                 />
 
                 <div className="recent-chat-info">
@@ -696,7 +752,7 @@ const DashBoard = () => {
                   <div className="notification-icon"></div>
                   <div className="profile">
                     <img
-                      style={user.active ? { border: "1px solid #4dc9e6" } : {}}
+                      style={user.active ? { border: "2px solid #4dc9e6" } : {}}
                       src="http://placehold.co/40x40"
                       alt="profile of user"
                       className="profile-picture"
@@ -739,6 +795,7 @@ const DashBoard = () => {
             <div className="header-container">
               <div className="profile">
                 <span
+                  className="back"
                   style={{ marginRight: "10px" }}
                   onClick={() => setSelectedMember(null)}
                 >
@@ -767,11 +824,13 @@ const DashBoard = () => {
                 </div>
               </div>
               {isOpen ? (
-                <IoIosOptions
-                  size={24}
-                  style={{ cursor: "pointer" }}
-                  onClick={handleToggle}
-                />
+                <span className="option-container">
+                  <IoIosOptions
+                    size={24}
+                    style={{ cursor: "pointer" }}
+                    onClick={handleToggle}
+                  />
+                </span>
               ) : (
                 <div
                   className="features"
@@ -795,7 +854,9 @@ const DashBoard = () => {
                         onClick={handleIconClick}
                         style={{ display: "flex", alignItems: "center" }}
                       >
-                        <BsFileFont />
+                        <span className="option-container">
+                          <BsFileFont />
+                        </span>
                       </label>
                       {isDropdownVisible && (
                         <select
@@ -826,13 +887,17 @@ const DashBoard = () => {
                     onClick={handleDeleteChat}
                     style={{ width: "40px", padding: "15px" }}
                   >
-                    <MdDeleteOutline size={20} />
+                    <span className="option-container">
+                      <MdDeleteOutline size={20} />
+                    </span>
                   </div>
-                  <MdClose
-                    size={24}
-                    style={{ cursor: "pointer" }}
-                    onClick={handleToggle}
-                  />
+                  <span className="option-container">
+                    <MdClose
+                      size={24}
+                      style={{ cursor: "pointer" }}
+                      onClick={handleToggle}
+                    />
+                  </span>
                 </div>
               )}
             </div>
@@ -880,7 +945,7 @@ const DashBoard = () => {
             {/* Emoji Picker Toggle Button */}
             <button
               onClick={() => setShowEmojiPicker((prev) => !prev)}
-              className="emoji-picker-button"
+              className="option-container emoji-picker-button"
               style={{
                 marginRight: "10px",
                 backgroundColor: "transparent",

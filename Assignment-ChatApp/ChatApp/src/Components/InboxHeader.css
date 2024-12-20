@@ -241,6 +241,18 @@
 .chat-input box-icon:hover {
   color: #3198b6;
 }
+.back:hover {
+  cursor: pointer;
+  scale: 1.5;
+  transition: transform 0.3s;
+  color: #ff4d4d;
+}
+.option-container:hover {
+  cursor: pointer;
+  scale: 1.1;
+  transition: transform 0.3s;
+  color: #ff4d4d;
+}
 
 /* Keyframes for Fade-In Animation */
 @keyframes fadeIn {
