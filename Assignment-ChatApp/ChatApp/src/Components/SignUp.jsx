@@ -34,15 +34,59 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false);
   const db = getFirestore(app);
   const auth = getAuth(app);
+  const validateForm = () => {
+    let isValid = true;
 
+    const nameRegex = /^[A-Za-z]+$/; // Regular expression to allow only letters
+
+    if (!firstName.trim()) {
+      toast.error("First Name is required.");
+      isValid = false;
+    } else if (!nameRegex.test(firstName)) {
+      toast.error("First Name must contain only letters.");
+      isValid = false;
+    }
+
+    if (!lastName.trim()) {
+      toast.error("Last Name is required.");
+      isValid = false;
+    } else if (!nameRegex.test(lastName)) {
+      toast.error("Last Name must contain only letters.");
+      isValid = false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      toast.error("Email is required.");
+      isValid = false;
+    } else if (!emailRegex.test(email)) {
+      toast.error("Invalid email format.");
+      isValid = false;
+    }
+
+    if (!password) {
+      toast.error("Password is required.");
+      isValid = false;
+    } else if (password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      isValid = false;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      isValid = false;
+    }
+
+    return isValid;
+  };
   const handleSignUp = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return; // Stop form submission if validation fails
+    }
     setError(""); // Clear previous errors
     setLoading(true); // Show loading state
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!"); // Show error using toast
-      return;
-    }
+
     try {
       // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(
@@ -171,7 +215,7 @@ const SignUp = () => {
               fontSize: "15px",
             }}
           >
-            Sign in
+            <span className=" option-container"> Login </span>
           </button>
         </p>
       </div>

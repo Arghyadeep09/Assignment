@@ -9,6 +9,12 @@ body {
   min-height: 100vh;
   padding: 20px;
 }
+.option-container:hover {
+  cursor: pointer;
+  scale: 1.1;
+  transition: transform 0.3s;
+  color: #ff4d4d;
+}
 
 .signup-card {
   background-color: rgba(0, 0, 0, 0.3);

@@ -76,8 +76,9 @@ const Login = () => {
       navigate("/DashBoard");
       // console.log("User logged in:", userCredential.user);
     } catch (error) {
-      setError("Invalid email or password. Please try again.");
-      toast.error(`Error: ${error.message}`);
+      toast.error("Invalid email or password. Please try again.");
+      //setError("Invalid email or password. Please try again.");
+      toast.error(error);
     } finally {
       setLoading(false); // Remove loading state
     }
@@ -157,7 +158,7 @@ const Login = () => {
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <input
-              type="text"
+              type="email"
               placeholder="Email"
               required
               onChange={(e) => setEmail(e.target.value)}
@@ -216,7 +217,10 @@ const Login = () => {
               }}
               onClick={handleGoogleLogin}
             >
-              <box-icon type="logo" name="google" color="#fff"></box-icon>
+              <span className="option-container">
+                {" "}
+                <box-icon type="logo" name="google" color="#fff"></box-icon>
+              </span>
             </button>
           </p>
         </div>
@@ -233,7 +237,7 @@ const Login = () => {
               border: "none",
             }}
           >
-            Sign up
+            <span className="option-container"> Sign up</span>
           </button>
         </p>
       </div>

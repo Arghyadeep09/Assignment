@@ -10,7 +10,12 @@
   text-align: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
-
+.option-container:hover {
+  cursor: pointer;
+  scale: 1.1;
+  transition: transform 0.3s;
+  color: #ff4d4d;
+}
 .auth-container h2 {
   font-size: 28px;
   font-weight: bold;

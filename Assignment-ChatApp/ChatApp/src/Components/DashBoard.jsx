@@ -1,4 +1,4 @@
-import "./InboxHeader.css"; // Import your CSS for styling
+import "./../styles/InboxHeader.css"; // Import your CSS for styling
 import "boxicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAuth } from "firebase/auth";
@@ -63,9 +63,9 @@ const DashBoard = () => {
       try {
         const userRef = doc(db, "users", user.uid);
         await setDoc(userRef, { status: "active" }, { merge: true });
-        console.log("User status set to active.");
+        //console.log("User status set to active.");
       } catch (error) {
-        console.error("Error updating user status to active:", error);
+        toast.error(error);
       }
     };
 
@@ -114,7 +114,8 @@ const DashBoard = () => {
       await updateDoc(chatRoomRef, {
         [`typing.${user.uid}`]: isTyping,
       });
-    } catch (error) {
+    } catch (error) { 
+      toast.error(error.message);
       //  console.error("Error updating typing status:", error);
     }
   };
@@ -197,7 +198,8 @@ const DashBoard = () => {
         font: newFont,
       }));
     } catch (error) {
-      // console.error("Error updating chatroom font:", error);
+      // console.error("Error updating chatroom font:", error); 
+      toast.error(error.message);
       alert("Failed to update font. Please try again.");
     }
   };
@@ -505,7 +507,8 @@ const DashBoard = () => {
         setChatMessages([]); // No messages in a new chat room
       }
     } catch (error) {
-      // console.error("Error fetching or creating chat room:", error);
+      // console.error("Error fetching or creating chat room:", error); 
+      toast(error);
     }
   };
 
@@ -595,7 +598,9 @@ const DashBoard = () => {
       // Clear the input field after sending
       setNewMessage("");
     } catch (error) {
-      // console.error("Error sending message:", error);
+      // console.error("Error sending message:", error); 
+      toast(error);
+      
     }
   };
   const handleEmojiClick = (emojiObject) => {
@@ -750,16 +755,20 @@ const DashBoard = () => {
               <div className="chat-header-right">
                 <div className="header-right">
                   <div className="notification-icon"></div>
-                  <div className="profile">
-                    <img
-                      style={user.active ? { border: "2px solid #4dc9e6" } : {}}
-                      src="http://placehold.co/40x40"
-                      alt="profile of user"
-                      className="profile-picture"
-                    />
-                    <span className=" profile-name">{user.name}</span>
-                    <SignOut />
-                  </div>
+                  {user ? (
+                    <div className="profile">
+                      <img
+                        // style={user.active ? { border: "2px solid #4dc9e6" } : {}}
+                        src="http://placehold.co/40x40"
+                        alt="profile of user"
+                        className="profile-picture"
+                      />
+                      <span className=" profile-name">{user.name}</span>
+                      <SignOut />
+                    </div>
+                  ) : (
+                    loading
+                  )}
                 </div>
               </div>
             </div>
