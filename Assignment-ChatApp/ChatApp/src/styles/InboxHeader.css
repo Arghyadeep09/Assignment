@@ -358,6 +358,25 @@
   color: #2c3e50;
   cursor: pointer;
 }
+.sidebar.active {
+  display: none;
+}
+/* Ensure Sidebar is Always Visible on Larger Screens */
+@media (min-width: 769px) {
+  .sidebar {
+    display: block !important;
+    position: relative;
+    width: 300px;
+    background: #ffffff;
+    border-right: 1px solid #eaeaea;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: none;
+  }
+  .menu-icon {
+    display: none; /* Hide menu icon on larger screens */
+  }
+}
 /* Hide Sidebar and Show Menu Icon on Smaller Screens */
 @media (max-width: 768px) {
   .sidebar {

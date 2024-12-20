@@ -1,11 +1,13 @@
 import "./../styles/InboxHeader.css"; // Import your CSS for styling
+import ChatInput from "./ChatInput";
+import ChatMessages from "./ChatMessages";
 import "boxicons";
 import { useSelector, useDispatch } from "react-redux";
 import { getAuth } from "firebase/auth";
 import { useState, useEffect } from "react";
 import { app } from "../firebaseConfig";
 import { setTeamMembers } from "./../store/teamMembersSlice";
-import EmojiPicker from "emoji-picker-react";
+// import EmojiPicker from "emoji-picker-react";
 import loadingGif from "./../assets/a28a042da0a1ea728e75d8634da98a4e.gif";
 import loadingImage from "./../assets/talking-1988-ezgif.com-gif-to-webm-converter.webm";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +50,7 @@ const DashBoard = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
   const [sidebarActive, setSidebarActive] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
   const [timeStampColor, setTimeStampColor] = useState(" #718096");
@@ -57,7 +59,21 @@ const DashBoard = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Handle sidebar state on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setSidebarActive(false); // Reset sidebar state on larger screens
+      }
+    };
 
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   //set user active on refresh event
   useEffect(() => {
     const setUserActive = async () => {
@@ -595,10 +611,10 @@ const DashBoard = () => {
     }
   };
   // to add emoji with the message and close the emojicon
-  const handleEmojiClick = (emojiObject) => {
-    setNewMessage((prev) => prev + emojiObject.emoji);
-    setShowEmojiPicker(false);
-  };
+  // const handleEmojiClick = (emojiObject) => {
+  //   setNewMessage((prev) => prev + emojiObject.emoji);
+  //   setShowEmojiPicker(false);
+  // };
   // console.log(selectedMember);
   // to return to home page when user not logged in
   useEffect(() => {
@@ -609,7 +625,7 @@ const DashBoard = () => {
   }, [user, navigate]); // Depend on user and navigate
 
   if (loading) {
-    return ( 
+    return (
       // loading page
       <div
         style={{
@@ -630,8 +646,8 @@ const DashBoard = () => {
     );
   }
   // if error is encountered
-  if (error) 
-    return <div style={{ width: "100vw", height: "100vh" }}>error</div>; 
+  if (error)
+    return <div style={{ width: "100vw", height: "100vh" }}>error</div>;
 
   //dashboard
   return (
@@ -643,7 +659,7 @@ const DashBoard = () => {
             name="x"
             onClick={() => setSidebarActive(!sidebarActive)}
           ></box-icon>
-        )} 
+        )}
         <h2 className="app-title">Chatter</h2>
         {/* search box */}
         <div className="search-box">
@@ -822,11 +838,13 @@ const DashBoard = () => {
                       <label
                         htmlFor="font-dropdown"
                         onClick={handleIconClick}
-                        style={{ display: "flex", alignItems: "center" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
                       >
-                        <span className="option-container">
-                          <BsFileFont />
-                        </span>
+                        <BsFileFont />
                       </label>
                       {isDropdownVisible && (
                         <select
@@ -878,7 +896,7 @@ const DashBoard = () => {
             </div>
           </div>
           {/* //{selectedChatRoom && <p>Chat Room: {selectedChatRoom.id}</p>} */}
-        </div> 
+        </div>
         {/* to show home section or the chat window  */}
         {selectedMember == null && (
           <div
@@ -905,94 +923,23 @@ const DashBoard = () => {
         )}
         {/* Chat Messages */}
         {selectedMember !== null && (
-          <div
-            className="chat-messages"
-            style={{
-              backgroundColor: selectedChatRoom?.color || "#ffffff", // Default white
-              padding: "10px",
-              borderRadius: "8px",
-              fontFamily: selectedFont,
-              color: selectedChatRoom?.textColor || "#000000",
-            }}
-          >
-            {chatMessages.map((message, index) => (
-              <div
-                key={index}
-                className={`message ${
-                  message.senderId === user.uid ? "sent" : "received"
-                }`}
-              >
-                <p
-                  className="message-text"
-                  style={{ color: selectedChatRoom?.textColor || "#000000" }}
-                >
-                  {message.text}
-                </p>
-                <span
-                  className="message-time"
-                  style={{ color: timeStampColor }}
-                >
-                  {new Date(message.timestamp?.toDate()).toLocaleTimeString()}
-                </span>
-              </div>
-            ))}
-          </div>
+          <ChatMessages
+            selectedChatRoom={selectedChatRoom}
+            chatMessages={chatMessages}
+            user={user}
+            selectedFont={selectedFont}
+            timeStampColor={timeStampColor}
+          />
         )}
         {/* Message Input  area  */}
         {selectedMember !== null && (
-          <div className="chat-input" style={{ position: "relative" }}>
-            {/* Emoji Picker Toggle Button */}
-            <button
-              onClick={() => setShowEmojiPicker((prev) => !prev)}
-              className="option-container emoji-picker-button"
-              style={{
-                marginRight: "10px",
-                backgroundColor: "transparent",
-                border: "none",
-              }}
-            >
-              <box-icon name="happy" size="md"></box-icon>
-            </button>
-            {/* Emoji Picker Component */}
-            {showEmojiPicker && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "50px",
-                  left: "10px",
-                  zIndex: 100,
-                  background: "white",
-                  boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-                  borderRadius: "8px",
-                }}
-              >
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
-              </div>
-            )}
-            {/* Message Input Field */}
-            <input
-              type="text"
-              placeholder="Enter your message here..."
-              value={newMessage}
-              onChange={(e) => {
-                setNewMessage(e.target.value); // Update the message state
-                handleInputChange(); // Trigger typing status logic
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage(); // Send message on Enter key
-              }}
-            />
-            {/* Send Button */}
-            <button
-              onClick={sendMessage}
-              style={{
-                backgroundColor: "transparent",
-                border: "none",
-              }}
-            >
-              <box-icon name="send" size="md" color="#ff4d4d"></box-icon>
-            </button>
-          </div>
+          <ChatInput
+            selectedMember={selectedMember}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            sendMessage={sendMessage}
+            handleInputChange={handleInputChange}
+          />
         )}
       </div>
     </div>
