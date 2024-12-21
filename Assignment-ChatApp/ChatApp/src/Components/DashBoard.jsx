@@ -50,7 +50,7 @@ const DashBoard = () => {
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
-  
+
   const [sidebarActive, setSidebarActive] = useState(false);
   const [selectedFont, setSelectedFont] = useState("Arial");
   const [timeStampColor, setTimeStampColor] = useState(" #718096");
@@ -59,7 +59,7 @@ const DashBoard = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isOpen, setIsOpen] = useState(true);
-  
+
   // Handle sidebar state on window resize
   useEffect(() => {
     const handleResize = () => {
@@ -629,7 +629,7 @@ const DashBoard = () => {
       // loading page
       <div
         style={{
-          height: "400vh",
+          height: "100vh",
           width: "100vw",
           display: "flex",
           alignItems: "center",

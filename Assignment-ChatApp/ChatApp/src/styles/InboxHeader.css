@@ -1,8 +1,30 @@
 /* General Dashboard Container */
+:root {
+  --background-color: #f4f4f9; /* Light mode */
+  --text-color: #000000;
+  --primary-color: #4dc9e6;
+  --secondary-color: #ffffff;
+  --border-color: #eaeaea;
+  --input-bg-color: #f9f9f9;
+  --hover-bg-color: #f1f5f9;
+  --time-color: #718096;
+}
+
+.dark-mode {
+  --background-color: #121212; /* Dark mode */
+  --text-color: #e0e0e0;
+  --primary-color: #1e88e5;
+  --secondary-color: #1c1c1c;
+  --border-color: #333333;
+  --input-bg-color: #1f1f1f;
+  --hover-bg-color: #252525;
+  --time-color: #888888;
+}
 .dashboard-container {
   display: flex;
   height: 100vh;
   background-color: #f4f4f9;
+  color: var(--text-color);
 }
 
 /* Sidebar Styles */
