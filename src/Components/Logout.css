@@ -1,0 +1,22 @@
+.log-out {
+  display: inline-flex; /* Align icon within the container */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Make it circular */
+  background-color: #f0f0f0; /* Light grey background */
+  color: #333; /* Icon color */
+  cursor: pointer; /* Pointer cursor */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth effects */
+}
+
+.log-out:hover {
+  background-color: #e74c3c; /* Red background on hover */
+  color: #fff; /* White icon on hover */
+  transform: scale(1.1); /* Slight zoom effect */
+}
+
+.log-out:active {
+  transform: scale(0.95); /* Press-down effect */
+}

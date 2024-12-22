@@ -1,0 +1,133 @@
+.get-started:hover {
+  background-color: bisque;
+}
+
+.main-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 95vw;
+}
+.main-content .text-container h1 {
+  margin-top: 20px;
+  font-size: 3.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.text-container h3 {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 30px;
+}
+.img-container .image1 {
+  opacity: 0;
+  transform: translateX(-100px);
+  animation: slideIn 1s ease-out forwards;
+}
+
+.img-container .image2 {
+  opacity: 0;
+  transform: translateY(-100px);
+  animation: slideUp 1s ease-in forwards;
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 1030px) {
+  .main-content {
+    max-width: 80vw;
+  }
+}
+
+@media (max-width: 733px) {
+  .text-container {
+    margin-top: 60px;
+    min-height: 300px;
+  }
+  .main-content {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 150vh;
+    /* padding: 20px; */
+  }
+  .text-container h1 {
+    font-size: 1.5rem;
+    line-height: 60px;
+  }
+
+  .text-container h3 {
+    font-size: 1rem;
+    margin-bottom: 50px;
+  }
+
+  .main-content {
+    gap: 20px;
+  }
+
+  .get-started {
+    font-size: 1rem;
+    padding: 8px 16px;
+  }
+  .img-container {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .img-container img {
+    margin-right: 20px;
+    max-width: 80%;
+    height: auto;
+  }
+}
+
+@media (max-width: 572px) {
+  .text-container {
+    margin-top: 40px;
+    min-height: 300px;
+  }
+  .text-container h1 {
+    font-size: 1rem;
+    line-height: 60px;
+  }
+  .main-content {
+    max-width: 50vw;
+    min-height: 150vh;
+  }
+  .text-container h3 {
+    font-size: 0.75rem;
+    margin-bottom: 20px;
+  }
+  .img-container {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .img-container img {
+    margin-right: 20px;
+    max-width: 80%;
+    height: auto;
+  }
+  .img-container {
+    display: none !important;
+  }
+}

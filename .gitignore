@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -22,3 +23,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+=======
+# Node.js
+node_modules/
+npm-debug.log
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Log files
+*.log
+
+# Environment variables
+.env
+>>>>>>> upstream/master
